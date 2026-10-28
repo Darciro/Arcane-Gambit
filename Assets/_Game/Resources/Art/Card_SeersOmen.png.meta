@@ -1,0 +1,886 @@
+fileFormatVersion: 2
+guid: 0bb0a81d1f73f459b98f6ca976974138
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7370497807097986103
+    second: Card_PressagioDoVidente_0
+  - first:
+      213: -3912243558893146907
+    second: Card_PressagioDoVidente_1
+  - first:
+      213: 8312345582829344126
+    second: Card_PressagioDoVidente_2
+  - first:
+      213: 1151766175238780886
+    second: Card_PressagioDoVidente_3
+  - first:
+      213: 5929826501277859423
+    second: Card_PressagioDoVidente_4
+  - first:
+      213: 6585334275015937163
+    second: Card_PressagioDoVidente_5
+  - first:
+      213: -3012807292485491133
+    second: Card_PressagioDoVidente_6
+  - first:
+      213: -9182306184132334858
+    second: Card_PressagioDoVidente_7
+  - first:
+      213: 3940434109304265818
+    second: Card_PressagioDoVidente_8
+  - first:
+      213: 661372410336329888
+    second: Card_PressagioDoVidente_9
+  - first:
+      213: -8884101836664310175
+    second: Card_PressagioDoVidente_10
+  - first:
+      213: 4039264689832511561
+    second: Card_PressagioDoVidente_11
+  - first:
+      213: 8722403452545760912
+    second: Card_PressagioDoVidente_12
+  - first:
+      213: 2607281988375189156
+    second: Card_PressagioDoVidente_13
+  - first:
+      213: 6933325786071466414
+    second: Card_PressagioDoVidente_14
+  - first:
+      213: 8823634921296120488
+    second: Card_PressagioDoVidente_15
+  - first:
+      213: 4742911485107138588
+    second: Card_PressagioDoVidente_16
+  - first:
+      213: -3044568762506445451
+    second: Card_PressagioDoVidente_17
+  - first:
+      213: -5368440329211571143
+    second: Card_PressagioDoVidente_18
+  - first:
+      213: -8800271083525043786
+    second: Card_PressagioDoVidente_19
+  - first:
+      213: 8450038606129768574
+    second: Card_PressagioDoVidente_20
+  - first:
+      213: 1058365648627523309
+    second: Card_PressagioDoVidente_21
+  - first:
+      213: -7858583082163589986
+    second: Card_PressagioDoVidente_22
+  - first:
+      213: -2182722122292012056
+    second: Card_PressagioDoVidente_23
+  - first:
+      213: 7306281566422580124
+    second: Card_PressagioDoVidente_24
+  - first:
+      213: 425963223128642819
+    second: Card_PressagioDoVidente_25
+  - first:
+      213: 9191834952048487013
+    second: Card_PressagioDoVidente_26
+  - first:
+      213: -2742442252553209932
+    second: Card_PressagioDoVidente_27
+  - first:
+      213: -1655469678688489821
+    second: Card_PressagioDoVidente_28
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_0
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 186
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c301268b4bb6b990800000000000000
+      internalID: -7370497807097986103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_1
+      rect:
+        serializedVersion: 2
+        x: 155
+        y: 202
+        width: 15
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ec2d5d063be4b9c0800000000000000
+      internalID: -3912243558893146907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_2
+      rect:
+        serializedVersion: 2
+        x: 197
+        y: 209
+        width: 6
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7594d254426b5370800000000000000
+      internalID: 8312345582829344126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_3
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 202
+        width: 15
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d7fa6beb35ebff00800000000000000
+      internalID: 1151766175238780886
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_4
+      rect:
+        serializedVersion: 2
+        x: 307
+        y: 215
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5e3d5c09c9fa4250800000000000000
+      internalID: 5929826501277859423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_5
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 184
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8c878de1aec36b50800000000000000
+      internalID: 6585334275015937163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_6
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 184
+        width: 29
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34622b2eabb5036d0800000000000000
+      internalID: -3012807292485491133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_7
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 184
+        width: 29
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6fa6bebec25e19080800000000000000
+      internalID: -9182306184132334858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_8
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 179
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5cd9e1f1fb3fa630800000000000000
+      internalID: 3940434109304265818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_9
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 154
+        width: 28
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a0475ef3baad2900800000000000000
+      internalID: 661372410336329888
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_10
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 90
+        width: 150
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1667a35137455b480800000000000000
+      internalID: -8884101836664310175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_11
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 145
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 948ce3f95d95e0830800000000000000
+      internalID: 4039264689832511561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_12
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 156
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09e71a01ab33c0970800000000000000
+      internalID: 8722403452545760912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_13
+      rect:
+        serializedVersion: 2
+        x: 197
+        y: 160
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a6906a872dee2420800000000000000
+      internalID: 2607281988375189156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_14
+      rect:
+        serializedVersion: 2
+        x: 222
+        y: 155
+        width: 8
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea188de611f183060800000000000000
+      internalID: 6933325786071466414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_15
+      rect:
+        serializedVersion: 2
+        x: 277
+        y: 154
+        width: 28
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8aa46971639d37a70800000000000000
+      internalID: 8823634921296120488
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_16
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 121
+        width: 38
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c107eeeddd432d140800000000000000
+      internalID: 4742911485107138588
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_17
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 121
+        width: 38
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57d7d8067d48fb5d0800000000000000
+      internalID: -3044568762506445451
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_18
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 78
+        width: 28
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 934967bb6f77f75b0800000000000000
+      internalID: -5368440329211571143
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_19
+      rect:
+        serializedVersion: 2
+        x: 278
+        y: 78
+        width: 29
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b9095b43182fd580800000000000000
+      internalID: -8800271083525043786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_20
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 24
+        width: 33
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e78a3b09751944570800000000000000
+      internalID: 8450038606129768574
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_21
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 35
+        width: 30
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dee5be033f110be00800000000000000
+      internalID: 1058365648627523309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_22
+      rect:
+        serializedVersion: 2
+        x: 260
+        y: 36
+        width: 28
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9caeb5c254b0f290800000000000000
+      internalID: -7858583082163589986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_23
+      rect:
+        serializedVersion: 2
+        x: 316
+        y: 52
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ebd5695bc965b1e0800000000000000
+      internalID: -2182722122292012056
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_24
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 29
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c9b3a93df50256560800000000000000
+      internalID: 7306281566422580124
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_25
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 28
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30596f96b4359e500800000000000000
+      internalID: 425963223128642819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_26
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 17
+        width: 16
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56aaede3035ff8f70800000000000000
+      internalID: 9191834952048487013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_27
+      rect:
+        serializedVersion: 2
+        x: 197
+        y: 5
+        width: 6
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b73b872d43e0f9d0800000000000000
+      internalID: -2742442252553209932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PressagioDoVidente_28
+      rect:
+        serializedVersion: 2
+        x: 230
+        y: 17
+        width: 16
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3aea75929179609e0800000000000000
+      internalID: -1655469678688489821
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Card_PressagioDoVidente_0: -7370497807097986103
+      Card_PressagioDoVidente_1: -3912243558893146907
+      Card_PressagioDoVidente_10: -8884101836664310175
+      Card_PressagioDoVidente_11: 4039264689832511561
+      Card_PressagioDoVidente_12: 8722403452545760912
+      Card_PressagioDoVidente_13: 2607281988375189156
+      Card_PressagioDoVidente_14: 6933325786071466414
+      Card_PressagioDoVidente_15: 8823634921296120488
+      Card_PressagioDoVidente_16: 4742911485107138588
+      Card_PressagioDoVidente_17: -3044568762506445451
+      Card_PressagioDoVidente_18: -5368440329211571143
+      Card_PressagioDoVidente_19: -8800271083525043786
+      Card_PressagioDoVidente_2: 8312345582829344126
+      Card_PressagioDoVidente_20: 8450038606129768574
+      Card_PressagioDoVidente_21: 1058365648627523309
+      Card_PressagioDoVidente_22: -7858583082163589986
+      Card_PressagioDoVidente_23: -2182722122292012056
+      Card_PressagioDoVidente_24: 7306281566422580124
+      Card_PressagioDoVidente_25: 425963223128642819
+      Card_PressagioDoVidente_26: 9191834952048487013
+      Card_PressagioDoVidente_27: -2742442252553209932
+      Card_PressagioDoVidente_28: -1655469678688489821
+      Card_PressagioDoVidente_3: 1151766175238780886
+      Card_PressagioDoVidente_4: 5929826501277859423
+      Card_PressagioDoVidente_5: 6585334275015937163
+      Card_PressagioDoVidente_6: -3012807292485491133
+      Card_PressagioDoVidente_7: -9182306184132334858
+      Card_PressagioDoVidente_8: 3940434109304265818
+      Card_PressagioDoVidente_9: 661372410336329888
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

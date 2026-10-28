@@ -1,0 +1,756 @@
+fileFormatVersion: 2
+guid: 17fb5a793ebfd4d3aa1c37916c08cc8f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2815542266324226447
+    second: Marker_Threat_0
+  - first:
+      213: -925430287070925288
+    second: Marker_Threat_1
+  - first:
+      213: 2628191116223092900
+    second: Marker_Threat_2
+  - first:
+      213: -8621509981179633132
+    second: Marker_Threat_3
+  - first:
+      213: -2508397224153980190
+    second: Marker_Threat_4
+  - first:
+      213: -7344393189738154436
+    second: Marker_Threat_5
+  - first:
+      213: 6929576790948237399
+    second: Marker_Threat_6
+  - first:
+      213: 3384749347758996514
+    second: Marker_Threat_7
+  - first:
+      213: 4953974171143286474
+    second: Marker_Threat_8
+  - first:
+      213: -4826154853471703823
+    second: Marker_Threat_9
+  - first:
+      213: 6602315413822409481
+    second: Marker_Threat_10
+  - first:
+      213: 7140726966651098125
+    second: Marker_Threat_11
+  - first:
+      213: 5839133669685503137
+    second: Marker_Threat_12
+  - first:
+      213: -210523568112346800
+    second: Marker_Threat_13
+  - first:
+      213: 4587074005559679739
+    second: Marker_Threat_14
+  - first:
+      213: -506600424539153713
+    second: Marker_Threat_15
+  - first:
+      213: -1836759602089220075
+    second: Marker_Threat_16
+  - first:
+      213: 1094349030869432961
+    second: Marker_Threat_17
+  - first:
+      213: 2448718924748485920
+    second: Marker_Threat_18
+  - first:
+      213: -6872209856010075173
+    second: Marker_Threat_19
+  - first:
+      213: 819875081291842358
+    second: Marker_Threat_20
+  - first:
+      213: -3379272552320380296
+    second: Marker_Threat_21
+  - first:
+      213: -5485485790352834863
+    second: Marker_Threat_22
+  - first:
+      213: -308671938237647029
+    second: Marker_Threat_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Marker_Threat_0
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 142
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17e65a5e93f2de8d0800000000000000
+      internalID: -2815542266324226447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_1
+      rect:
+        serializedVersion: 2
+        x: 35
+        y: 142
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 81eefba9e063823f0800000000000000
+      internalID: -925430287070925288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_2
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 142
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a8905c35e5397420800000000000000
+      internalID: 2628191116223092900
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_3
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 142
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 412ad40d95e3a5880800000000000000
+      internalID: -8621509981179633132
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_4
+      rect:
+        serializedVersion: 2
+        x: 101
+        y: 142
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e2e9b2c302603dd0800000000000000
+      internalID: -2508397224153980190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_5
+      rect:
+        serializedVersion: 2
+        x: 123
+        y: 142
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c36fbd26e49731a90800000000000000
+      internalID: -7344393189738154436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_6
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 133
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 750d24c706dca2060800000000000000
+      internalID: 6929576790948237399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_7
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 123
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22cf8ee399b09fe20800000000000000
+      internalID: 3384749347758996514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_8
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 111
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: acea479e24d00c440800000000000000
+      internalID: 4953974171143286474
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_9
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 101
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1fcaac71bbd060db0800000000000000
+      internalID: -4826154853471703823
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_10
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 89
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90b88f763e220ab50800000000000000
+      internalID: 6602315413822409481
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_11
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 79
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d049a4dc755f81360800000000000000
+      internalID: 7140726966651098125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_12
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 67
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a4a0a1b225c80150800000000000000
+      internalID: 5839133669685503137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_13
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 57
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 059d0d12ee1141df0800000000000000
+      internalID: -210523568112346800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_14
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 45
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfa10d3318f88af30800000000000000
+      internalID: 4587074005559679739
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_15
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 35
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fca1844199138f8f0800000000000000
+      internalID: -506600424539153713
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_16
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 23
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5182fab9fd48286e0800000000000000
+      internalID: -1836759602089220075
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_17
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 13
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18af34d35a8ef2f00800000000000000
+      internalID: 1094349030869432961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_18
+      rect:
+        serializedVersion: 2
+        x: 23
+        y: 10
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 025f86063e89bf120800000000000000
+      internalID: 2448718924748485920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_19
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 10
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd3c496eb8101a0a0800000000000000
+      internalID: -6872209856010075173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_20
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 10
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6334894ea08c06b00800000000000000
+      internalID: 819875081291842358
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_21
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 10
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87257bf84896a11d0800000000000000
+      internalID: -3379272552320380296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_22
+      rect:
+        serializedVersion: 2
+        x: 111
+        y: 10
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1def09dacb3afd3b0800000000000000
+      internalID: -5485485790352834863
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Threat_23
+      rect:
+        serializedVersion: 2
+        x: 133
+        y: 10
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b47b631f18067bbf0800000000000000
+      internalID: -308671938237647029
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Marker_Threat_0: -2815542266324226447
+      Marker_Threat_1: -925430287070925288
+      Marker_Threat_10: 6602315413822409481
+      Marker_Threat_11: 7140726966651098125
+      Marker_Threat_12: 5839133669685503137
+      Marker_Threat_13: -210523568112346800
+      Marker_Threat_14: 4587074005559679739
+      Marker_Threat_15: -506600424539153713
+      Marker_Threat_16: -1836759602089220075
+      Marker_Threat_17: 1094349030869432961
+      Marker_Threat_18: 2448718924748485920
+      Marker_Threat_19: -6872209856010075173
+      Marker_Threat_2: 2628191116223092900
+      Marker_Threat_20: 819875081291842358
+      Marker_Threat_21: -3379272552320380296
+      Marker_Threat_22: -5485485790352834863
+      Marker_Threat_23: -308671938237647029
+      Marker_Threat_3: -8621509981179633132
+      Marker_Threat_4: -2508397224153980190
+      Marker_Threat_5: -7344393189738154436
+      Marker_Threat_6: 6929576790948237399
+      Marker_Threat_7: 3384749347758996514
+      Marker_Threat_8: 4953974171143286474
+      Marker_Threat_9: -4826154853471703823
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,36 @@
+# Unity: arquivos gerados
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+Build/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+[Uu]nity[Ll]ockfile
+
+# IDEs e arquivos de projeto gerados pelo Unity
+.vs/
+.idea/
+*.csproj
+*.sln
+*.slnx
+*.unityproj
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Sistema operacional
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini

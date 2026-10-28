@@ -1,0 +1,444 @@
+fileFormatVersion: 2
+guid: c388cfb7922ce4c958e1ebd4a1877546
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 4105070646199202599
+    second: Card_PreceAoAmanhecer_0
+  - first:
+      213: -3178181285097156333
+    second: Card_PreceAoAmanhecer_1
+  - first:
+      213: -4076088769540254058
+    second: Card_PreceAoAmanhecer_2
+  - first:
+      213: 1306208959351991956
+    second: Card_PreceAoAmanhecer_3
+  - first:
+      213: 649836188933191580
+    second: Card_PreceAoAmanhecer_4
+  - first:
+      213: -3711060598253679841
+    second: Card_PreceAoAmanhecer_5
+  - first:
+      213: -5511679492815281437
+    second: Card_PreceAoAmanhecer_6
+  - first:
+      213: 9219546895674779510
+    second: Card_PreceAoAmanhecer_7
+  - first:
+      213: 5801370853463269656
+    second: Card_PreceAoAmanhecer_8
+  - first:
+      213: -8595092352716586296
+    second: Card_PreceAoAmanhecer_9
+  - first:
+      213: -1309172711726222547
+    second: Card_PreceAoAmanhecer_10
+  - first:
+      213: -4375547140890720665
+    second: Card_PreceAoAmanhecer_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_0
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 156
+        width: 130
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 723369cc00428f830800000000000000
+      internalID: 4105070646199202599
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_1
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 129
+        width: 7
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3115dfdb5f4d4e3d0800000000000000
+      internalID: -3178181285097156333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_2
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 165
+        width: 130
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69618923cd2de67c0800000000000000
+      internalID: -4076088769540254058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_3
+      rect:
+        serializedVersion: 2
+        x: 123
+        y: 108
+        width: 31
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49eab90c026902210800000000000000
+      internalID: 1306208959351991956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_4
+      rect:
+        serializedVersion: 2
+        x: 162
+        y: 124
+        width: 15
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c977e83229ea40900800000000000000
+      internalID: 649836188933191580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_5
+      rect:
+        serializedVersion: 2
+        x: 223
+        y: 124
+        width: 16
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1b04254c0aaf7cc0800000000000000
+      internalID: -3711060598253679841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_6
+      rect:
+        serializedVersion: 2
+        x: 245
+        y: 109
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e2a0f214b49283b0800000000000000
+      internalID: -5511679492815281437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_7
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 60
+        width: 374
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67720caed0962ff70800000000000000
+      internalID: 9219546895674779510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_8
+      rect:
+        serializedVersion: 2
+        x: 174
+        y: 49
+        width: 52
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 811abf2ed0c928050800000000000000
+      internalID: 5801370853463269656
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_9
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 41
+        width: 104
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c2c6a04b0918b880800000000000000
+      internalID: -8595092352716586296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_10
+      rect:
+        serializedVersion: 2
+        x: 219
+        y: 41
+        width: 123
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d237cefda52e4dde0800000000000000
+      internalID: -1309172711726222547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Card_PreceAoAmanhecer_11
+      rect:
+        serializedVersion: 2
+        x: 98
+        y: 21
+        width: 205
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7668b39de0fe643c0800000000000000
+      internalID: -4375547140890720665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Card_PreceAoAmanhecer_0: 4105070646199202599
+      Card_PreceAoAmanhecer_1: -3178181285097156333
+      Card_PreceAoAmanhecer_10: -1309172711726222547
+      Card_PreceAoAmanhecer_11: -4375547140890720665
+      Card_PreceAoAmanhecer_2: -4076088769540254058
+      Card_PreceAoAmanhecer_3: 1306208959351991956
+      Card_PreceAoAmanhecer_4: 649836188933191580
+      Card_PreceAoAmanhecer_5: -3711060598253679841
+      Card_PreceAoAmanhecer_6: -5511679492815281437
+      Card_PreceAoAmanhecer_7: 9219546895674779510
+      Card_PreceAoAmanhecer_8: 5801370853463269656
+      Card_PreceAoAmanhecer_9: -8595092352716586296
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

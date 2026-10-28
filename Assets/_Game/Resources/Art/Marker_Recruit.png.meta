@@ -1,0 +1,912 @@
+fileFormatVersion: 2
+guid: d3afc2779fd154997bcaa24dc542ed1c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8797403752141893550
+    second: Marker_Recruit_0
+  - first:
+      213: -7704720001790731763
+    second: Marker_Recruit_1
+  - first:
+      213: 2541142290198351575
+    second: Marker_Recruit_2
+  - first:
+      213: -7490833997328652671
+    second: Marker_Recruit_3
+  - first:
+      213: 7124729864202573941
+    second: Marker_Recruit_4
+  - first:
+      213: -6611391731827745563
+    second: Marker_Recruit_5
+  - first:
+      213: 4005955011349531236
+    second: Marker_Recruit_6
+  - first:
+      213: -3120482741278610766
+    second: Marker_Recruit_7
+  - first:
+      213: 5018879713260180194
+    second: Marker_Recruit_8
+  - first:
+      213: -5873581435491589311
+    second: Marker_Recruit_9
+  - first:
+      213: 2327745591102328044
+    second: Marker_Recruit_10
+  - first:
+      213: 6171002184150434197
+    second: Marker_Recruit_11
+  - first:
+      213: 466789906347394997
+    second: Marker_Recruit_12
+  - first:
+      213: -8945437747314308950
+    second: Marker_Recruit_13
+  - first:
+      213: -363151263335647752
+    second: Marker_Recruit_14
+  - first:
+      213: -7611942235541295522
+    second: Marker_Recruit_15
+  - first:
+      213: -3633768354724090640
+    second: Marker_Recruit_16
+  - first:
+      213: 4402050532120757410
+    second: Marker_Recruit_17
+  - first:
+      213: 6170023560057978037
+    second: Marker_Recruit_18
+  - first:
+      213: 8413251724049342416
+    second: Marker_Recruit_19
+  - first:
+      213: -5131384819161744181
+    second: Marker_Recruit_20
+  - first:
+      213: -7215188428106291244
+    second: Marker_Recruit_21
+  - first:
+      213: -8421789952011747994
+    second: Marker_Recruit_22
+  - first:
+      213: 8434220239910144644
+    second: Marker_Recruit_23
+  - first:
+      213: 677836924526981944
+    second: Marker_Recruit_24
+  - first:
+      213: -8788142998172086187
+    second: Marker_Recruit_25
+  - first:
+      213: -5262115329985049272
+    second: Marker_Recruit_26
+  - first:
+      213: -2763019364795863848
+    second: Marker_Recruit_27
+  - first:
+      213: -4423402614727310252
+    second: Marker_Recruit_28
+  - first:
+      213: -8046982229787713985
+    second: Marker_Recruit_29
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Marker_Recruit_0
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 137
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eaf2b181a18a61a70800000000000000
+      internalID: 8797403752141893550
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_1
+      rect:
+        serializedVersion: 2
+        x: 35
+        y: 137
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0a9a6fcaf5531590800000000000000
+      internalID: -7704720001790731763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_2
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 137
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7decefa0373f34320800000000000000
+      internalID: 2541142290198351575
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_3
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 137
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1866ec5ea263b0890800000000000000
+      internalID: -7490833997328652671
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_4
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 137
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5785964201020e260800000000000000
+      internalID: 7124729864202573941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_5
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 137
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ecd371af3e9f34a0800000000000000
+      internalID: -6611391731827745563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_6
+      rect:
+        serializedVersion: 2
+        x: 115
+        y: 137
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46a4fadbbd2089730800000000000000
+      internalID: 4005955011349531236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_7
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 137
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2bae956da71d1b4d0800000000000000
+      internalID: -3120482741278610766
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_8
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 123
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e2994f0284a6a540800000000000000
+      internalID: 5018879713260180194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_9
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 123
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 143e132ddc8dc7ea0800000000000000
+      internalID: -5873581435491589311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_10
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 107
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cecc22d3840dd4020800000000000000
+      internalID: 2327745591102328044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_11
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 107
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59142768acdc3a550800000000000000
+      internalID: 6171002184150434197
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_12
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 91
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b7039852fe5a7600800000000000000
+      internalID: 466789906347394997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_13
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 91
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa8c5f683cb6bd380800000000000000
+      internalID: -8945437747314308950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_14
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 75
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f5f42d99d3d5faf0800000000000000
+      internalID: -363151263335647752
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_15
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 75
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5ea4c7ddd2fc5690800000000000000
+      internalID: -7611942235541295522
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_16
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 59
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0fc6d941fe2429dc0800000000000000
+      internalID: -3633768354724090640
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_17
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 59
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a4806ac2a9371d30800000000000000
+      internalID: 4402050532120757410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_18
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 43
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5bcfb09dcb350a550800000000000000
+      internalID: 6170023560057978037
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_19
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 43
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0df57e12edfd1c470800000000000000
+      internalID: 8413251724049342416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_20
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 27
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcc3808b1b8a9c8b0800000000000000
+      internalID: -5131384819161744181
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_21
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 27
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d727333a508edb90800000000000000
+      internalID: -7215188428106291244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_22
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 17
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66db261c8aacf1b80800000000000000
+      internalID: -8421789952011747994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_23
+      rect:
+        serializedVersion: 2
+        x: 35
+        y: 17
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48a014d2f9e5c0570800000000000000
+      internalID: 8434220239910144644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_24
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 17
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 833f21e6719286900800000000000000
+      internalID: 677836924526981944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_25
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 17
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 550dd96318e3a0680800000000000000
+      internalID: -8788142998172086187
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_26
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 17
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84d8a1dbcf539f6b0800000000000000
+      internalID: -5262115329985049272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_27
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 17
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8dc21ddd688c7a9d0800000000000000
+      internalID: -2763019364795863848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_28
+      rect:
+        serializedVersion: 2
+        x: 115
+        y: 17
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45405a212caec92c0800000000000000
+      internalID: -4423402614727310252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Marker_Recruit_29
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 17
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3e5f97fb40635090800000000000000
+      internalID: -8046982229787713985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Marker_Recruit_0: 8797403752141893550
+      Marker_Recruit_1: -7704720001790731763
+      Marker_Recruit_10: 2327745591102328044
+      Marker_Recruit_11: 6171002184150434197
+      Marker_Recruit_12: 466789906347394997
+      Marker_Recruit_13: -8945437747314308950
+      Marker_Recruit_14: -363151263335647752
+      Marker_Recruit_15: -7611942235541295522
+      Marker_Recruit_16: -3633768354724090640
+      Marker_Recruit_17: 4402050532120757410
+      Marker_Recruit_18: 6170023560057978037
+      Marker_Recruit_19: 8413251724049342416
+      Marker_Recruit_2: 2541142290198351575
+      Marker_Recruit_20: -5131384819161744181
+      Marker_Recruit_21: -7215188428106291244
+      Marker_Recruit_22: -8421789952011747994
+      Marker_Recruit_23: 8434220239910144644
+      Marker_Recruit_24: 677836924526981944
+      Marker_Recruit_25: -8788142998172086187
+      Marker_Recruit_26: -5262115329985049272
+      Marker_Recruit_27: -2763019364795863848
+      Marker_Recruit_28: -4423402614727310252
+      Marker_Recruit_29: -8046982229787713985
+      Marker_Recruit_3: -7490833997328652671
+      Marker_Recruit_4: 7124729864202573941
+      Marker_Recruit_5: -6611391731827745563
+      Marker_Recruit_6: 4005955011349531236
+      Marker_Recruit_7: -3120482741278610766
+      Marker_Recruit_8: 5018879713260180194
+      Marker_Recruit_9: -5873581435491589311
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
