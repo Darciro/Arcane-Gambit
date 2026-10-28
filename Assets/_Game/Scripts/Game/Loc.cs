@@ -33,6 +33,7 @@ namespace ArcaneGambit.Game
         public static string Format(string key, params object[] args) => string.Format(Get(key), args);
 
         public static string UnitName(UnitType type) => Get("unit." + type);
+        public static string UnitText(UnitType type) => Get($"unit.{type}.text");
         public static string Army(Side side) => Get("army." + side);
         public static string SideName(Side side) => Get("side." + side);
         public static string CardName(CardId id) => Get($"card.{id}.name");
@@ -100,6 +101,12 @@ namespace ArcaneGambit.Game
             ["unit.SiegeEngineers"] = "Engenharia",
             ["unit.Marshal"] = "Marechal",
             ["unit.Sovereign"] = "Soberano",
+            ["unit.Infantry.text"] = "Avança 1 casa. Captura 1 casa na diagonal à frente.",
+            ["unit.Cavalry.text"] = "Salta em L, por cima de outras peças. Captura na casa de destino.",
+            ["unit.Crossbowmen.text"] = "Até 2 casas na diagonal, sem atravessar peças. Captura na casa de destino.",
+            ["unit.SiegeEngineers.text"] = "1 casa em linha reta. Captura na casa de destino.",
+            ["unit.Marshal.text"] = "Até 2 casas em qualquer direção, sem atravessar peças. Captura na casa de destino.",
+            ["unit.Sovereign.text"] = "1 casa em qualquer direção. Se for capturado, a campanha está perdida.",
             ["fmt.unitAt"] = "{0} {1}",
             ["fmt.cardKind"] = "— {0} —",
 
@@ -179,24 +186,48 @@ namespace ArcaneGambit.Game
             ["ui.orders"] = "Ordens · {0} de {1}",
             ["ui.ordersBonus"] = " · +{0} mov.",
             ["ui.ordersIdle"] = "Ordens · —",
-            ["ui.handSummary"] = "Mão · {0} cartas   ·   Baralho {1}",
-            ["ui.reserveHeader"] = "Reserva · recrutar nas fileiras {0}",
+            ["ui.handSummary"] = "Mão {0} · Baralho {1} · Descarte {2}",
+            ["ui.reserveHeader"] = "Reserva · fileiras {0}",
             ["ui.ranks.White"] = "1–2",
             ["ui.ranks.Black"] = "7–8",
-            ["ui.reserveCount"] = "{0} ×{1}",
-            ["ui.recruit"] = "Recrutar",
-            ["ui.choose"] = "Escolha…",
+            ["ui.reserveCount"] = "×{0}",
+            ["ui.reserveHint"] = "clique para recrutar",
+            ["ui.reserveChoose"] = "escolha a casa",
+            ["ui.conditions.header"] = "Condições em campo",
+            ["ui.conditions.none"] = "nenhuma ativa",
+            ["ui.conditions.empty"] = "Nenhuma condição afeta o campo de batalha.",
 
             // action panel
             ["ui.action.header"] = "Ação em curso",
             ["ui.action.idleTitle"] = "Ordens do turno",
+            ["ui.action.unitTitle"] = "Unidade selecionada",
+            ["ui.action.moraleAfter"] = "Moral após",
+            ["ui.plate.unit"] = "Unidade",
+            ["ui.plate.reserve"] = "Reserva",
+            ["ui.plate.army"] = "Exército",
+            ["ui.plate.armyText"] = "Proteja o seu Soberano: se ele for capturado, a campanha está perdida.",
+            ["ui.plate.enemyText"] = "Capture o Soberano inimigo para vencer a campanha.",
+            ["ui.step.next"] = "Próximo passo",
+            ["ui.step.opponent"] = "Adversário",
+            ["ui.step.unit"] = "Unidade",
+            ["ui.step.order"] = "Ordem",
+            ["ui.step.reserve"] = "Reserva",
+            ["ui.step.square"] = "Casa",
+            ["ui.step.confirm"] = "Confirmar",
+            ["ui.step.ReinforcedShield.0"] = "Unidade",
+            ["ui.step.ReinforcedArmor.0"] = "Engenharia",
+            ["ui.step.WarHammer.0"] = "Portador",
+            ["ui.step.ImprovisedPalisade.0"] = "Casa",
+            ["ui.step.CrossbowVolley.0"] = "Atirador",
+            ["ui.step.CrossbowVolley.1"] = "Alvo",
+            ["ui.step.ExtraRations.0"] = "Unidade",
+            ["ui.step.ExtraRations.1"] = "Destino",
             ["ui.action.idleHint"] = "Selecione uma unidade, recrute da reserva ou escolha uma carta da mão.",
             ["ui.action.orders"] = "Ordens",
             ["ui.action.ordersBonus"] = "{0} (+{1} mov.)",
             ["ui.action.proactive"] = "Carta proativa",
             ["ui.action.proactiveUsed"] = "já usada",
             ["ui.action.proactiveAvailable"] = "1 disponível",
-            ["ui.action.position"] = "Posição",
             ["ui.action.moves"] = "Movimentos",
             ["ui.action.captures"] = "Capturas",
             ["ui.action.equipment"] = "Equipamento",
@@ -212,7 +243,6 @@ namespace ArcaneGambit.Game
             ["ui.action.inReserve"] = "Na reserva",
             ["ui.action.reserveValue"] = "×{0}",
             ["ui.action.hintRecruit"] = "Escolha uma casa livre nas fileiras {0}. Ela só age no próximo turno.",
-            ["ui.action.type"] = "Tipo",
             ["ui.action.cardCost"] = "{0} Moral",
             ["ui.action.plusOrder"] = " · 1 Ordem",
             ["ui.action.playCard"] = "Jogar carta",
@@ -238,8 +268,12 @@ namespace ArcaneGambit.Game
 
             // side panels
             ["ui.history"] = "Histórico",
+            ["ui.historyOrder"] = "mais recente no topo",
             ["ui.deck"] = "Baralho",
+            ["ui.deckDraw"] = "compra 1 por turno",
             ["ui.discard"] = "Descarte",
+            ["ui.discardLast"] = "última: {0}",
+            ["ui.discardEmpty"] = "nenhuma carta",
             ["ui.cardCount"] = "{0} cartas",
 
             // overlays

@@ -27,7 +27,7 @@ namespace ArcaneGambit.Game
         public const float CardHeight = 348f;
 
         static TMP_FontAsset s_title, s_body, s_italic, s_fraktur;
-        static Sprite s_panel, s_primary, s_secondary, s_solid;
+        static Sprite s_panel, s_primary, s_secondary, s_solid, s_tile, s_highlight;
         static readonly Dictionary<string, Sprite> s_art = new Dictionary<string, Sprite>();
         static int s_generation;
 
@@ -36,7 +36,7 @@ namespace ArcaneGambit.Game
         static void ResetStatics()
         {
             s_title = s_body = s_italic = s_fraktur = null;
-            s_panel = s_primary = s_secondary = s_solid = null;
+            s_panel = s_primary = s_secondary = s_solid = s_tile = s_highlight = null;
             s_art.Clear();
             s_generation++;
         }
@@ -103,9 +103,6 @@ namespace ArcaneGambit.Game
             return $"<font=\"{s_fraktur.name}\"><color={ToHex(Rubric)}><size={percent}%>{text[0]}</size></color></font>{text.Substring(1)}";
         }
 
-        /// <summary>Wraps a fragment in the title font (useful inside EB Garamond text).</summary>
-        public static string Caps(string text) => $"<font=\"{TitleFont.name}\">{text}</font>";
-
         // ------------------------------------------------------------------ sprites
 
         /// <summary>PNG from Resources/Art (rasterized from the art direction SVGs).</summary>
@@ -130,6 +127,12 @@ namespace ArcaneGambit.Game
         static Sprite PrimarySprite => s_primary != null ? s_primary : s_primary = Frame(Rubric, RubricDark, 2, 0, 0);
         static Sprite SecondarySprite => s_secondary != null ? s_secondary : s_secondary = Frame(Color.clear, Ink, 2, 0, 0);
         public static Sprite Solid => s_solid != null ? s_solid : s_solid = Frame(Color.white, Color.white, 0, 0, 1);
+        /// <summary>Reserve tile: faint paper fill with a soft ink rule (".rt" class).</summary>
+        public static Sprite Tile => s_tile != null ? s_tile
+            : s_tile = Frame(new Color(1f, 0.98f, 0.93f, 0.25f), new Color(Ink.r, Ink.g, Ink.b, 0.5f), 1, 0, 0);
+        /// <summary>Hollow rubric rule marking the chosen option.</summary>
+        public static Sprite Highlight => s_highlight != null ? s_highlight
+            : s_highlight = Frame(Color.clear, Rubric, 2, 0, 0);
 
         /// <summary>Code-generated 9-slice frame: outer rule, gap and inner rule.</summary>
         static Sprite Frame(Color fill, Color line, int outer, int gap, int inner)
@@ -230,6 +233,17 @@ namespace ArcaneGambit.Game
         {
             var img = Image(parent, "Button", primary ? PrimarySprite : SecondarySprite, x, y, w, h, raycast: true);
             img.type = UnityEngine.UI.Image.Type.Sliced;
+            var button = MakeButton(img, onClick);
+            var text = Text(img.transform, label, TitleFont, fontSize, primary ? Cream : InkText, 0, 0, w, h,
+                TextAlignmentOptions.Center);
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            return button;
+        }
+
+        /// <summary>Turns a graphic into a button with the parchment hover/press tints.</summary>
+        public static Button MakeButton(Image img, UnityAction onClick)
+        {
+            img.raycastTarget = true;
             var button = img.gameObject.AddComponent<Button>();
             button.targetGraphic = img;
             var colors = button.colors;
@@ -239,9 +253,6 @@ namespace ArcaneGambit.Game
             colors.disabledColor = new Color(1f, 1f, 1f, 0.35f);
             button.colors = colors;
             button.onClick.AddListener(onClick);
-            var text = Text(img.transform, label, TitleFont, fontSize, primary ? Cream : InkText, 0, 0, w, h,
-                TextAlignmentOptions.Center);
-            text.textWrappingMode = TextWrappingModes.NoWrap;
             return button;
         }
 
@@ -265,27 +276,42 @@ namespace ArcaneGambit.Game
         /// The root already has the scaled size and receives clicks.</summary>
         public static RectTransform Card(Transform parent, CardInfo info, float scale)
         {
-            var root = Rect(parent, "Card " + info.Id, 0, 0, CardWidth * scale, CardHeight * scale);
-            var face = Rect(root, "Face", 0, 0, CardWidth, CardHeight);
+            var root = CardFace(parent, "Card " + info.Id, info.Kind == CardKind.Arcane ? "CardFrame_Arcane" : "CardFrame",
+                Loc.CardName(info.Id), 162f, Art("Card_" + info.Id), Loc.KindName(info.Kind),
+                info.IsReaction ? Rubric : InkSoft, Loc.CardText(info.Id), scale, out var face);
+            Seal(face, info.Cost, 191.5f, 26.5f, 34f);
+            return root;
+        }
+
+        /// <summary>Card-shaped plate for what is not a card (a unit, an army): same frame and typography,
+        /// with the token as the illustration.</summary>
+        public static RectTransform Plate(Transform parent, string title, Sprite art, string kind, string text,
+            float scale = 1f)
+        {
+            return CardFace(parent, "Plate", "CardFrame", title, 203f, art, kind, InkSoft, text, scale, out _);
+        }
+
+        static RectTransform CardFace(Transform parent, string name, string frame, string title, float titleWidth,
+            Sprite art, string kind, Color kindColor, string text, float scale, out RectTransform face)
+        {
+            var root = Rect(parent, name, 0, 0, CardWidth * scale, CardHeight * scale);
+            face = Rect(root, "Face", 0, 0, CardWidth, CardHeight);
             face.localScale = new Vector3(scale, scale, 1f);
 
-            Image(face, "Frame", Art(info.Kind == CardKind.Arcane ? "CardFrame_Arcane" : "CardFrame"),
-                0, 0, CardWidth, CardHeight, raycast: true);
+            Image(face, "Frame", Art(frame), 0, 0, CardWidth, CardHeight, raycast: true);
 
-            var name = Text(face, Initial(Loc.CardName(info.Id), 140), TitleFont, 18f, InkText,
-                22.5f, 19.5f, 162f, 48f, TextAlignmentOptions.Left);
-            name.lineSpacing = -18f;
-            Seal(face, info.Cost, 191.5f, 26.5f, 34f);
+            var heading = Text(face, Initial(title, 140), TitleFont, 18f, InkText,
+                22.5f, 19.5f, titleWidth, 48f, TextAlignmentOptions.Left);
+            heading.lineSpacing = -18f;
 
-            var art = Image(face, "Art", Art("Card_" + info.Id), 22.5f, 74.5f, 203f, 122f);
-            art.preserveAspect = true;
+            var illustration = Image(face, "Art", art, 22.5f, 74.5f, 203f, 122f);
+            illustration.preserveAspect = true;
 
-            var kind = Text(face, Loc.Format("fmt.cardKind", Loc.KindName(info.Kind)), TitleFont, 13f,
-                info.IsReaction ? Rubric : InkSoft, 22.5f, 208f, 203f, 18f, TextAlignmentOptions.Top);
-            kind.characterSpacing = 16f;
+            var kindText = Text(face, Loc.Format("fmt.cardKind", kind), TitleFont, 13f, kindColor,
+                22.5f, 208f, 203f, 18f, TextAlignmentOptions.Top);
+            kindText.characterSpacing = 16f;
 
-            Text(face, Loc.CardText(info.Id), BodyFont, 14.5f, InkText, 24f, 228f, 200f, 96f,
-                TextAlignmentOptions.Center);
+            Text(face, text, BodyFont, 14.5f, InkText, 24f, 228f, 200f, 96f, TextAlignmentOptions.Center);
             return root;
         }
     }
