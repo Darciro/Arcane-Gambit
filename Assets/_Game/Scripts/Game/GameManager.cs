@@ -23,6 +23,7 @@ namespace ArcaneGambit.Game
         const float Inset = 30f, Square = 80f, PieceSize = 70f;
         const float HandScale = 0.6f;
         const float ArmyX = 42f, TopArmyY = 84f, BottomArmyY = 544f;
+        const float WaitingAlpha = 0.5f;
 
         [SerializeField, Tooltip("0 = random seed for every match")] int _seed;
         [SerializeField, Min(0.01f)] float _moveDuration = 0.22f;
@@ -45,6 +46,7 @@ namespace ArcaneGambit.Game
         sealed class ArmyPanel
         {
             public RectTransform Root;
+            public CanvasGroup Group;
             public TextMeshProUGUI Subtitle, Morale, Orders, Hand;
             public Image[] Pips, OrderIcons;
             public TextMeshProUGUI[] ReserveLabels;
@@ -62,6 +64,8 @@ namespace ArcaneGambit.Game
         Ai _ai;
         bool _awaitingStart;
         Coroutine _aiStep;
+        bool _waiting;
+        Coroutine _waitingFade;
 
         /// <summary>The player may issue commands (their Maneuvers phase, after the opening dialog).</summary>
         bool HumanTurn => !_awaitingStart && _match.Phase == Phase.Maneuvers && _match.Current == _human;
@@ -80,6 +84,7 @@ namespace ArcaneGambit.Game
         readonly TextMeshProUGUI[] _rowLabels = new TextMeshProUGUI[4];
         readonly TextMeshProUGUI[] _rowValues = new TextMeshProUGUI[4];
         Button _endTurn, _actionPrimary, _actionCancel;
+        CanvasGroup _handGroup, _rightColumn;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Bootstrap()
@@ -354,6 +359,16 @@ namespace ArcaneGambit.Game
             RefreshAction();
             RefreshLog();
             RefreshOverlay();
+            RefreshWaiting();
+        }
+
+        /// <summary>Fades the player's side of the screen (army panel, hand, right column) while the AI plays.</summary>
+        void RefreshWaiting()
+        {
+            bool waiting = !_awaitingStart && _match.Phase != Phase.GameOver && _match.Current != _human;
+            if (waiting == _waiting) return;
+            _waiting = waiting;
+            PlayWaitingFade(waiting ? WaitingAlpha : 1f);
         }
 
         void RefreshHeader()
@@ -467,6 +482,7 @@ namespace ArcaneGambit.Game
             float area = _hand.rect.width;
             float step = hand.Count > 1 ? Mathf.Min(w + 12f, (area - w) / (hand.Count - 1)) : 0f;
             float start = (area - (w + step * (hand.Count - 1))) * 0.5f;
+            RectTransform selectedCard = null;
 
             for (int i = 0; i < hand.Count; i++)
             {
@@ -484,7 +500,8 @@ namespace ArcaneGambit.Game
                 }
 
                 var group = card.gameObject.AddComponent<CanvasGroup>();
-                group.alpha = info.IsReaction || (HumanTurn && _match.CanPlay(info.Id)) ? 1f : 0.72f;
+                group.alpha = !HumanTurn || info.IsReaction || _match.CanPlay(info.Id) ? 1f : 0.72f;
+                if (selected) selectedCard = card;
 
                 int index = i;
                 var button = card.gameObject.AddComponent<Button>();
@@ -492,6 +509,8 @@ namespace ArcaneGambit.Game
                 button.onClick.AddListener(() => OnCardClicked(index));
                 AddHover(card, baseY, selected);
             }
+            // Drawn last so no neighbour overlaps it.
+            if (selectedCard != null) selectedCard.SetAsLastSibling();
         }
 
         static void AddHover(RectTransform card, float baseY, bool selected)
@@ -634,14 +653,15 @@ namespace ArcaneGambit.Game
 
         void BuildIntro()
         {
-            var panel = OverlayPanel(520f, 290f, 330f);
-            Ui.Label(panel, Loc.Get("ui.intro.header"), 0, 28, 520, 20, TextAlignmentOptions.Top);
-            Ui.Text(panel, Ui.Initial(Loc.Army(_human), 130), Ui.TitleFont, 38f, Ui.InkText, 0, 54, 520, 50,
+            var panel = OverlayPanel(1040f, 580f, 250f);
+            var header = Ui.Label(panel, Loc.Get("ui.intro.header"), 0, 56, 1040, 40, TextAlignmentOptions.Top);
+            header.fontSize = 28f;
+            Ui.Text(panel, Ui.Initial(Loc.Army(_human), 130), Ui.TitleFont, 76f, Ui.InkText, 0, 108, 1040, 100,
                 TextAlignmentOptions.Top);
             string order = Loc.Get(_match.Current == _human ? "ui.intro.youFirst" : "ui.intro.aiFirst");
-            Ui.Text(panel, Loc.Format("ui.intro.text", Loc.Army(_ai.Side)) + "\n" + order, Ui.ItalicFont, 18f,
-                Ui.InkBody, 40, 112, 440, 70, TextAlignmentOptions.Top);
-            Ui.Button(panel, Loc.Get("ui.intro.button"), true, 150, 206, 220, 46, OnStartMatch);
+            Ui.Text(panel, Loc.Format("ui.intro.text", Loc.Army(_ai.Side)) + "\n" + order, Ui.ItalicFont, 36f,
+                Ui.InkBody, 80, 224, 880, 140, TextAlignmentOptions.Top);
+            Ui.Button(panel, Loc.Get("ui.intro.button"), true, 300, 412, 440, 92, OnStartMatch, 34f);
         }
 
         void BuildReaction()
@@ -734,6 +754,13 @@ namespace ArcaneGambit.Game
 
         void PlayRecruit(Piece piece) => StartCoroutine(PopRoutine(piece.Rt));
 
+        void PlayWaitingFade(float alpha)
+        {
+            if (_waitingFade != null) StopCoroutine(_waitingFade);
+            _armies[(int)_human.Other()].Group.alpha = 1f;
+            _waitingFade = StartCoroutine(FadeRoutine(alpha, _handGroup, _rightColumn, _armies[(int)_human].Group));
+        }
+
         void Run(Piece piece, IEnumerator routine)
         {
             if (piece.Anim != null) StopCoroutine(piece.Anim);
@@ -778,6 +805,23 @@ namespace ArcaneGambit.Game
                 yield return null;
             }
             Destroy(piece.Rt.gameObject);
+        }
+
+        IEnumerator FadeRoutine(float to, params CanvasGroup[] groups)
+        {
+            const float duration = 0.25f;
+            bool done = false;
+            while (!done)
+            {
+                done = true;
+                foreach (var g in groups)
+                {
+                    g.alpha = Mathf.MoveTowards(g.alpha, to, Time.deltaTime / duration);
+                    done &= Mathf.Approximately(g.alpha, to);
+                }
+                yield return null;
+            }
+            _waitingFade = null;
         }
 
         static IEnumerator PopRoutine(RectTransform rt)
@@ -870,6 +914,7 @@ namespace ArcaneGambit.Game
             _armies[(int)Side.White] = BuildArmy(Side.White);
             BuildBoard();
             _hand = Ui.Rect(_stage, "Hand", 342f, 790f, 756f, 290f);
+            _handGroup = _hand.gameObject.AddComponent<CanvasGroup>();
             BuildRightColumn();
 
             _overlay = Ui.Stretch(Ui.Rect(root, "Overlay", 0, 0, 0, 0));
@@ -897,7 +942,7 @@ namespace ArcaneGambit.Game
         ArmyPanel BuildArmy(Side side)
         {
             var panel = Ui.Panel(_stage, $"Army {side}", ArmyX, TopArmyY, 300f, 444f).rectTransform;
-            var ui = new ArmyPanel { Root = panel };
+            var ui = new ArmyPanel { Root = panel, Group = panel.gameObject.AddComponent<CanvasGroup>() };
 
             Ui.Image(panel, "Emblem", Ui.UnitArt(UnitType.Sovereign, side), 16, 16, 50, 50);
             Ui.Text(panel, Loc.Army(side), Ui.TitleFont, 22f, Ui.InkText, 74, 18, 210, 28);
@@ -969,9 +1014,11 @@ namespace ArcaneGambit.Game
 
         void BuildRightColumn()
         {
-            const float x = 1098f, w = 300f;
+            const float w = 300f;
+            var column = Ui.Rect(_stage, "Right Column", 1098f, 0f, w, StageHeight);
+            _rightColumn = column.gameObject.AddComponent<CanvasGroup>();
 
-            var action = Ui.Panel(_stage, "Action Panel", x, 84f, w, 312f).rectTransform;
+            var action = Ui.Panel(column, "Action Panel", 0f, 84f, w, 312f).rectTransform;
             Ui.Label(action, Loc.Get("ui.action.header"), 20, 18, 260);
             _actionTitle = Ui.Text(action, "", Ui.TitleFont, 26f, Ui.InkText, 20, 40, 260, 36);
             for (int i = 0; i < _rowLabels.Length; i++)
@@ -985,13 +1032,13 @@ namespace ArcaneGambit.Game
             _actionCancel = Ui.Button(action, Loc.Get("ui.action.cancel"), false, 180, 254, 100, 42,
                 () => { ClearMode(); Refresh(); });
 
-            var history = Ui.Panel(_stage, "History Panel", x, 412f, w, 456f).rectTransform;
+            var history = Ui.Panel(column, "History Panel", 0f, 412f, w, 456f).rectTransform;
             Ui.Label(history, Loc.Get("ui.history"), 20, 18, 260);
             _log = Ui.Text(history, "", Ui.BodyFont, 15f, Ui.InkText, 20, 44, 260, 396);
             _log.overflowMode = TextOverflowModes.Truncate;
             _log.paragraphSpacing = 6f;
 
-            var deck = Ui.Panel(_stage, "Deck Panel", x, 884f, w, 92f).rectTransform;
+            var deck = Ui.Panel(column, "Deck Panel", 0f, 884f, w, 92f).rectTransform;
             Ui.Image(deck, "Back", Ui.Art("CardBack"), 20, 18, 38, 56);
             Ui.Label(deck, Loc.Get("ui.deck"), 68, 24, 80);
             _deck = Ui.Text(deck, "", Ui.BodyFont, 18f, Ui.InkText, 68, 44, 80, 26);
