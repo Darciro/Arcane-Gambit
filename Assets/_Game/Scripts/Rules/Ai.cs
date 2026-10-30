@@ -3,27 +3,19 @@ using System.Collections.Generic;
 
 namespace ArcaneGambit.Rules
 {
-    /// <summary>
-    /// Computer opponent (GDD §12: a simple, non-sophisticated AI). Takes one decision at a time by simulating
-    /// every legal command on a <see cref="Match.Clone"/> and scoring the result with a static evaluation
-    /// (material, Morale, cards, threats); the most promising commands get a second action of look-ahead.
-    /// It only uses what a human player could see: never the opponent's hand or deck contents.
-    /// </summary>
+    /// <summary>Only uses what a human player could see: never the opponent's hand or deck contents.</summary>
     public sealed class Ai
     {
         const float Win = 1000f;
-        /// <summary>Commands that get a second action of look-ahead.</summary>
         const int Shortlist = 8;
-        /// <summary>Minimum gain for a command to be worth an Order instead of ending the turn.</summary>
         const float Threshold = 0.05f;
-        /// <summary>Tie-breaking noise, so matches don't repeat.</summary>
         const float Noise = 0.04f;
-        /// <summary>Assumed chance that the opponent blocks a capture when it has Morale and cards.</summary>
         const float ReactChance = 0.3f;
 
-        enum ChoiceKind { Recruit, Move, Capture, Card }
+        public enum ChoiceKind { Recruit, Move, Capture, Card, EndTurn, React, Foresight }
 
-        sealed class Choice
+        /// <summary>A decision made by <see cref="Plan"/>, shown to the player before <see cref="Execute"/> applies it.</summary>
+        public sealed class Choice
         {
             public ChoiceKind Kind;
             public UnitType Type;
@@ -31,8 +23,10 @@ namespace ArcaneGambit.Rules
             public Coord To;
             public CardId Card;
             public Coord[] Picks;
+            public CardId? Reaction;
+            public int Index;
 
-            public bool IsAttack => Kind == ChoiceKind.Capture || (Kind == ChoiceKind.Card && Card == CardId.CrossbowVolley);
+            public bool IsAttack => Kind == ChoiceKind.Capture || (Kind == ChoiceKind.Card && Match.DeclaresCapture(Card));
         }
 
         readonly Random _rng;
@@ -45,7 +39,6 @@ namespace ArcaneGambit.Rules
             _rng = new Random(seed);
         }
 
-        /// <summary>Whether the match is waiting for this side: its turn, its Seer's Omen or its reaction.</summary>
         public bool HasDecision(Match m) => m.Phase switch
         {
             Phase.Maneuvers or Phase.Foresight => m.Current == Side,
@@ -53,23 +46,30 @@ namespace ArcaneGambit.Rules
             _ => false,
         };
 
-        /// <summary>Takes exactly one decision (a command, a reaction, a foresight pick or ending the turn).</summary>
-        public bool Act(Match m)
+        public bool Act(Match m) => Execute(m, Plan(m));
+
+        public Choice Plan(Match m)
         {
-            if (!HasDecision(m)) return false;
-            switch (m.Phase)
+            if (!HasDecision(m)) return null;
+            return m.Phase switch
             {
-                case Phase.Reaction:
-                    return m.React(ChooseReaction(m));
-                case Phase.Foresight:
-                    return m.ChooseForesight(ChooseForesight(m));
-                default:
-                    var choice = ChooseCommand(m);
-                    return (choice != null && Apply(m, choice)) || m.EndTurn();
-            }
+                Phase.Reaction => new Choice { Kind = ChoiceKind.React, Reaction = ChooseReaction(m) },
+                Phase.Foresight => new Choice { Kind = ChoiceKind.Foresight, Index = ChooseForesight(m) },
+                _ => ChooseCommand(m) ?? new Choice { Kind = ChoiceKind.EndTurn },
+            };
         }
 
-        // ================================================================== decisions
+        public bool Execute(Match m, Choice c)
+        {
+            if (c == null || !HasDecision(m)) return false;
+            return c.Kind switch
+            {
+                ChoiceKind.React => m.React(c.Reaction),
+                ChoiceKind.Foresight => m.ChooseForesight(c.Index),
+                ChoiceKind.EndTurn => m.EndTurn(),
+                _ => Apply(m, c) || m.EndTurn(),
+            };
+        }
 
         Choice ChooseCommand(Match m)
         {
@@ -135,8 +135,6 @@ namespace ArcaneGambit.Rules
             return best;
         }
 
-        /// <summary>Expected evaluation after <paramref name="c"/> (and, with look-ahead, the best next command).
-        /// Captures are blended with the chance of being blocked, without peeking at the opponent's hand.</summary>
         float Score(Match m, Choice c, float stay, bool lookAhead)
         {
             var sim = m.Clone();
@@ -155,8 +153,6 @@ namespace ArcaneGambit.Rules
             return score;
         }
 
-        /// <summary>Resolves the windows the AI's own command opened in a simulation: the opponent is assumed
-        /// not to react (blocking is priced in by <see cref="Score"/>), and Seer's Omen picks the best card.</summary>
         void Settle(Match sim)
         {
             if (sim.Phase == Phase.Reaction) sim.React(null);
@@ -179,27 +175,22 @@ namespace ArcaneGambit.Rules
             }
 
             var seen = new HashSet<CardId>();
-            var none = Array.Empty<Coord>();
             foreach (var id in m.CurrentPlayer.Hand)
-            {
-                if (!seen.Add(id) || !m.CanPlay(id)) continue;
-                switch (Match.PickCount(id))
-                {
-                    case 0:
-                        list.Add(new Choice { Kind = ChoiceKind.Card, Card = id, Picks = none });
-                        break;
-                    case 1:
-                        foreach (var a in m.CardTargets(id, none))
-                            list.Add(new Choice { Kind = ChoiceKind.Card, Card = id, Picks = new[] { a } });
-                        break;
-                    default:
-                        foreach (var a in m.CardTargets(id, none))
-                            foreach (var b in m.CardTargets(id, new[] { a }))
-                                list.Add(new Choice { Kind = ChoiceKind.Card, Card = id, Picks = new[] { a, b } });
-                        break;
-                }
-            }
+                if (seen.Add(id) && m.CanPlay(id)) AddCardChoices(m, id, new List<Coord>(), list);
             return list;
+        }
+
+        static void AddCardChoices(Match m, CardId id, List<Coord> picks, List<Choice> list)
+        {
+            if (Match.PicksComplete(id, picks.Count))
+                list.Add(new Choice { Kind = ChoiceKind.Card, Card = id, Picks = picks.ToArray() });
+            if (picks.Count == Match.PickCount(id)) return;
+            foreach (var c in m.CardTargets(id, picks))
+            {
+                picks.Add(c);
+                AddCardChoices(m, id, picks, list);
+                picks.RemoveAt(picks.Count - 1);
+            }
         }
 
         static bool Apply(Match m, Choice c) => c.Kind switch
@@ -207,12 +198,10 @@ namespace ArcaneGambit.Rules
             ChoiceKind.Recruit => m.Recruit(c.Type, c.To),
             ChoiceKind.Move => m.Move(m.FindUnit(c.UnitId), c.To),
             ChoiceKind.Capture => m.DeclareCapture(m.FindUnit(c.UnitId), c.To),
-            _ => m.PlayCard(c.Card, c.Picks),
+            ChoiceKind.Card => m.PlayCard(c.Card, c.Picks),
+            _ => false,
         };
 
-        // ================================================================== evaluation
-
-        /// <summary>Position value for this side (positive = good), assuming the opponent acts next.</summary>
         float Evaluate(Match m)
         {
             if (m.Winner.HasValue) return m.Winner == Side ? Win : -Win;
@@ -260,12 +249,14 @@ namespace ArcaneGambit.Rules
         {
             float value = Value(u.Type);
             if (u.Protection > 0) value += u.Type == UnitType.Sovereign ? 2.5f : 0.3f + 0.25f * value;
+            if (u.RangedProtection > 0) value += 0.1f + 0.1f * value;
             if (u.HasHammer && u.Type != UnitType.Sovereign) value += 0.5f;
+            if (u.HasLance) value += 0.5f;
+            if (u.HasHorseshoes) value += 0.3f;
+            if (u.HasBanner) value += 0.4f;
             return value;
         }
 
-        /// <summary>Small positional terms: troops close in on the enemy Sovereign, Infantry advances,
-        /// the Sovereign keeps an escort.</summary>
         static float Placement(Match m, Unit u, Unit enemySovereign)
         {
             if (u.Type == UnitType.Sovereign)
@@ -292,10 +283,12 @@ namespace ArcaneGambit.Rules
             CardId.ReinforcedShield => 0.6f,
             CardId.BracedSpears => 0.5f,
             CardId.SeersOmen => 0.5f,
+            CardId.HeroicInterposition => 0.7f,
+            CardId.CloseRanks => 0.6f,
+            CardId.VigilSeal => 0.6f,
             _ => 0.4f,
         };
 
-        /// <summary>The first points pay for reactions; Morale beyond 6 is mostly wasted by the cap.</summary>
         static float MoraleWorth(int morale, bool holdsReaction)
         {
             float first = holdsReaction ? 0.8f : 0.45f;
@@ -304,8 +297,6 @@ namespace ArcaneGambit.Rules
 
         static int Distance(Coord a, Coord b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
 
-        /// <summary>Expected losses on the opponent's next turn: units it can capture (two Orders) and,
-        /// above all, a Sovereign within reach of one capture or of a move followed by a capture.</summary>
         float Danger(Match m, Player me, Unit mySovereign)
         {
             var cheapestAttacker = new Dictionary<Coord, float>();
@@ -354,7 +345,6 @@ namespace ArcaneGambit.Rules
             return danger;
         }
 
-        /// <summary>Enemy units this side could capture later: a mild incentive to build pressure.</summary>
         float Pressure(Match m)
         {
             var threatened = new HashSet<Coord>();
@@ -369,7 +359,6 @@ namespace ArcaneGambit.Rules
             return pressure;
         }
 
-        /// <summary>An enemy unit can move (or capture) once and then threaten the Sovereign.</summary>
         bool OneMoveFromSovereign(Match m, Unit sovereign)
         {
             foreach (var u in m.Units)
@@ -382,18 +371,13 @@ namespace ArcaneGambit.Rules
             return false;
         }
 
-        /// <summary>Whether this side holds an affordable reaction that would save <paramref name="u"/> from a typical capture.</summary>
         static bool CanShield(Match m, Player me, Unit u)
         {
             foreach (var id in me.Hand)
             {
                 if (me.Morale < CardCatalog.Get(id).Cost) continue;
                 if (id == CardId.RaiseShields && u.Type == UnitType.Infantry) return true;
-                if (id == CardId.OrganizedRetreat)
-                {
-                    var back = u.Pos + new Coord(0, -u.Side.Forward());
-                    if (back.InBoard && m.At(back) == null && !m.HasPalisade(back)) return true;
-                }
+                if (id == CardId.OrganizedRetreat && m.RetreatSquare(u).HasValue) return true;
             }
             return false;
         }

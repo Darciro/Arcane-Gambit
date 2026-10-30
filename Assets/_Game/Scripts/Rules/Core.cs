@@ -7,11 +7,9 @@ namespace ArcaneGambit.Rules
 
     public enum UnitType { Infantry, Cavalry, Crossbowmen, SiegeEngineers, Marshal, Sovereign }
 
-    /// <summary>Maneuvers = active player acts; Reaction = defender's confrontation window;
-    /// Foresight = choosing a card from Seer's Omen; GameOver = a Sovereign was captured.</summary>
     public enum Phase { Maneuvers, Reaction, Foresight, GameOver }
 
-    /// <summary>Board square. X = file (a..h), Y = rank (1..8), both zero-based. White plays from the bottom (Y = 0).</summary>
+    /// <summary>X = file, Y = rank, both zero-based; White plays from Y = 0.</summary>
     public readonly struct Coord : IEquatable<Coord>
     {
         public readonly int X;
@@ -30,10 +28,8 @@ namespace ArcaneGambit.Rules
         public override bool Equals(object obj) => obj is Coord c && Equals(c);
         public override int GetHashCode() => X * 31 + Y;
 
-        /// <summary>Algebraic notation ("e4"); language-neutral.</summary>
         public override string ToString() => $"{(char)('a' + X)}{Y + 1}";
 
-        /// <summary>"e4" -> Coord(4, 3).</summary>
         public static Coord Parse(string square) => new Coord(square[0] - 'a', square[1] - '1');
     }
 
@@ -41,7 +37,6 @@ namespace ArcaneGambit.Rules
     {
         public static Side Other(this Side side) => side == Side.White ? Side.Black : Side.White;
 
-        /// <summary>Forward direction (towards the enemy).</summary>
         public static int Forward(this Side side) => side == Side.White ? 1 : -1;
     }
 
@@ -52,13 +47,24 @@ namespace ArcaneGambit.Rules
         public UnitType Type { get; internal set; }
         public Coord Pos { get; internal set; }
 
-        /// <summary>Turn in which it was recruited; it cannot act during that turn.</summary>
         public int RecruitedTurn { get; internal set; } = -1;
         public bool MovedThisTurn { get; internal set; }
 
-        /// <summary>Protection charges (Reinforced Shield / Reinforced Armor). At most 1 per category.</summary>
         public int Protection { get; set; }
+        /// <summary>Charges that only stop ranged captures (Reinforced Armor, Crossbow Pavise).</summary>
+        public int RangedProtection { get; set; }
         public bool HasHammer { get; set; }
+        public bool HasHorseshoes { get; set; }
+        public bool HasLance { get; set; }
+        public bool HasBanner { get; set; }
+
+        /// <summary>A Cavalry that just made a non-capturing jump may take its horseshoe step.</summary>
+        public bool Jumped { get; internal set; }
+        /// <summary>Movement bonuses are refused up to and including this turn (Close Ranks).</summary>
+        public int BonusLockTurn { get; internal set; }
+        public int FeintTurn { get; internal set; }
+
+        internal Unit Copy() => (Unit)MemberwiseClone();
 
         public override string ToString() => $"{Type} {Pos}";
     }
@@ -68,9 +74,9 @@ namespace ArcaneGambit.Rules
         public Side Side { get; }
         public int Morale { get; set; }
         public int Orders { get; set; }
-        /// <summary>Extra moves granted by cards (Forced March); spent before Orders.</summary>
         public int BonusMoves { get; set; }
         public bool PlayedProactive { get; set; }
+        public bool WagonReady { get; set; }
 
         public Dictionary<UnitType, int> Reserve { get; } = new Dictionary<UnitType, int>();
         /// <summary>Top of the deck = last element.</summary>
@@ -87,12 +93,19 @@ namespace ArcaneGambit.Rules
         public Unit Defender;
         public Coord From;
         public Coord Target;
-        /// <summary>Ranged attack (Crossbow Volley): the attacker does not advance.</summary>
-        public bool Ranged;
+        /// <summary>The card that declared the capture; null for an ordinary capture by a piece.</summary>
+        public CardId? Card;
+
+        public bool Ranged => Card == CardId.CrossbowVolley || Card == CardId.SiegeOrder;
+        public bool Arcane => Card == CardId.Fireball;
+        public bool Advances => !Ranged && !Arcane;
     }
 
-    public sealed class Palisade
+    public enum MarkerKind { Palisade, Ditch, Stakes, Smoke, Lightning }
+
+    public sealed class Marker
     {
+        public MarkerKind Kind;
         public Coord Pos;
         public Side Owner;
         public int ExpiresTurn;
@@ -101,10 +114,9 @@ namespace ArcaneGambit.Rules
     public enum EventKind
     {
         TurnStarted, Recruited, Moved, CaptureDeclared, Captured, Blocked,
-        Retreated, Intercepted, CardPlayed, Equipped, PalisadeRaised, PalisadeFell, GameOver,
+        Retreated, Intercepted, CardPlayed, Equipped, MarkerPlaced, MarkerRemoved, GameOver,
     }
 
-    /// <summary>Something that happened in the rules; the presentation drains the queue to animate it (later: Feel).</summary>
     public readonly struct MatchEvent
     {
         public readonly EventKind Kind;
@@ -121,13 +133,11 @@ namespace ArcaneGambit.Rules
     public enum LogKind
     {
         Preparation, Recruited, Moved, CaptureDeclared, Reacted, Retreated, Intercepted,
-        ProtectionBroken, Blocked, UnitCaptured, Victory, CardPlayed, PalisadeRaised, ExtraStep, ForesightDrawn,
+        ProtectionBroken, Blocked, UnitCaptured, Victory, CardPlayed, Fortified, ExtraStep, ForesightDrawn,
+        Swapped, WeatherCleared, CardDrawn, LightningMarked, LightningStruck,
     }
 
-    /// <summary>
-    /// Structured history entry. The rules never produce display text: the presentation formats each
-    /// <see cref="LogKind"/> in the active language. Field meaning per kind is documented at each call site in <see cref="Match"/>.
-    /// </summary>
+    /// <summary>Field meaning per kind is documented at each call site in <see cref="Match"/>.</summary>
     public sealed class LogEntry
     {
         public readonly int Turn;
