@@ -29,7 +29,7 @@
 | AG-034 | Fosso Raso | Fortificação | 2 | Escolha uma casa vazia adjacente a sua Engenharia. Por 2 rodadas, unidades que deslizam não podem atravessá-la; Cavalaria pode saltar sobre ela, mas não terminar nela. |
 | AG-012 | Presságio do Vidente | Arcanismo | 3 | Olhe as 3 cartas do topo do baralho. Compre 1 e coloque as outras 2 no fundo, na ordem escolhida. |
 | AG-017 | Bola de Fogo | Arcanismo | 3 | Ritual ofensivo: declare captura contra Infantaria ou Besteiros inimigos a até 2 casas de uma unidade aliada. Não atinge Soberano nem Engenharia; permite Reação. |
-| AG-018 | Prece ao Amanhecer | Arcanismo | 2 | Remova a condição climática ativa. Se não houver condição ativa, compre 1 carta. |
+| AG-018 | Prece ao Amanhecer | Arcanismo | 2 | Remova a condição climática mais recente. Se não houver condição ativa, compre 1 carta. |
 | AG-035 | Selo da Vigília | Arcanismo | 3 | Reação arcana: quando seu Soberano seria capturado por uma carta, cancele o efeito da carta e descarte o Selo. Não funciona contra captura normal por movimento de peça. |
 | AG-036 | Eco do Oráculo | Arcanismo | 2 | Ritual: escolha uma carta do seu descarte que não seja Arcana e coloque-a no topo do baralho; ela não é comprada imediatamente. |
 | AG-013 | Nevasca | Condição climática | 3 | Besteiros, Engenharia e Marechal movem no máximo 2 casas; bônus de movimento são suspensos. Cavalaria mantém o salto em L. |

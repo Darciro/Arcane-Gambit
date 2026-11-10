@@ -8,12 +8,23 @@ namespace ArcaneGambit.EditorTools
     /// </summary>
     sealed class ArtImporter : AssetPostprocessor
     {
-        public override uint GetVersion() => 1;
+        public override uint GetVersion() => 2;
 
         void OnPreprocessTexture()
         {
             if (!assetPath.Contains("/Resources/Art/")) return;
             var importer = (TextureImporter)assetImporter;
+            // Cursor.SetCursor needs a readable, uncompressed texture without mipmaps.
+            if (assetPath.Contains("/Resources/Art/Cursors/"))
+            {
+                importer.textureType = TextureImporterType.Cursor;
+                importer.isReadable = true;
+                importer.mipmapEnabled = false;
+                importer.alphaIsTransparency = true;
+                importer.npotScale = TextureImporterNPOTScale.None;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                return;
+            }
             importer.textureType = TextureImporterType.Sprite;
             importer.spriteImportMode = SpriteImportMode.Single;
         }

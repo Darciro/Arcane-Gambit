@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9260e82bf10a5426295646fcef72a8d1, type: 3}
+  m_Name: VigilSeal
+  m_EditorClassIdentifier: ArcaneGambit.FX::ArcaneGambit.FX.FxCue
+  _id: 66
+  _tier: 1
+  _player: {fileID: 2939539604519585985, guid: c65b3bd3d7333404f8817bdf45c76b7b, type: 3}
+  _intensity: 1
+  _repeatIntensity: 0.7
+  _timeout: 3

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9260e82bf10a5426295646fcef72a8d1, type: 3}
+  m_Name: FireballHit
+  m_EditorClassIdentifier: ArcaneGambit.FX::ArcaneGambit.FX.FxCue
+  _id: 62
+  _tier: 2
+  _player: {fileID: 588706466184588555, guid: 78bf52982ed7e4fae819afd4ad9afb84, type: 3}
+  _intensity: 1
+  _repeatIntensity: 0.7
+  _timeout: 6

@@ -585,18 +585,18 @@ namespace ArcaneGambit.Tests
             var volley = new[] { C("a1") };
             Assert.That(m.CardTargets(CardId.CrossbowVolley, volley), Does.Contain(C("d4")));
 
-            m.CurrentPlayer.Hand.Add(CardId.Gale);
-            Assert.That(m.PlayCard(CardId.Gale, new Coord[0]), Is.True);
-            Assert.That(m.CardTargets(CardId.CrossbowVolley, volley), Is.Empty, "Gale");
-
-            m.EndTurn();
-            m.EndTurn();
             m.CurrentPlayer.Hand.Add(CardId.MoonlessNight);
             Assert.That(m.PlayCard(CardId.MoonlessNight, new Coord[0]), Is.True);
-            Assert.That(m.Weather, Is.EqualTo(CardId.MoonlessNight));
             Assert.That(m.CardTargets(CardId.CrossbowVolley, volley), Is.Empty, "no observer");
             m.Place(Side.White, UnitType.Infantry, C("c4"));
             Assert.That(m.CardTargets(CardId.CrossbowVolley, volley), Does.Contain(C("d4")), "observer next to the target");
+
+            m.EndTurn();
+            m.EndTurn();
+            m.CurrentPlayer.Hand.Add(CardId.Gale);
+            Assert.That(m.PlayCard(CardId.Gale, new Coord[0]), Is.True);
+            Assert.That(m.Conditions, Is.EqualTo(new[] { CardId.MoonlessNight, CardId.Gale }));
+            Assert.That(m.CardTargets(CardId.CrossbowVolley, volley), Is.Empty, "Gale stacks on the night");
         }
 
         [Test]
@@ -618,6 +618,25 @@ namespace ArcaneGambit.Tests
             m.Move(infantry, C("d3"));
             m.CurrentPlayer.Hand.Add(CardId.ExtraRations);
             Assert.That(m.CanPlay(CardId.ExtraRations), Is.False);
+        }
+
+        [Test]
+        public void Conditions_StackUpToThree_TheFourthDisplacesTheOldest()
+        {
+            var m = Empty();
+            foreach (var card in new[] { CardId.LightningStorm, CardId.Fog, CardId.Mud, CardId.Gale })
+            {
+                m.CurrentPlayer.Morale = Match.MaxMorale;
+                m.CurrentPlayer.Hand.Add(card);
+                Assert.That(m.PlayCard(card, new Coord[0]), Is.True, card.ToString());
+                m.EndTurn();
+                m.EndTurn();
+            }
+            Assert.That(m.Conditions, Is.EqualTo(new[] { CardId.Fog, CardId.Mud, CardId.Gale }));
+            Assert.That(m.Markers, Has.None.Matches<Marker>(x => x.Kind == MarkerKind.Lightning), "storm gone");
+
+            m.CurrentPlayer.Hand.Add(CardId.Fog);
+            Assert.That(m.CanPlay(CardId.Fog), Is.False, "already in effect");
         }
 
         [Test]
@@ -719,12 +738,19 @@ namespace ArcaneGambit.Tests
         public void DawnPrayer_ClearsTheWeather_OrDrawsACard()
         {
             var m = Empty();
+            m.CurrentPlayer.Hand.Add(CardId.Gale);
+            m.PlayCard(CardId.Gale, new Coord[0]);
+            m.EndTurn();
             m.CurrentPlayer.Hand.Add(CardId.Fog);
             m.PlayCard(CardId.Fog, new Coord[0]);
             m.EndTurn();
             m.CurrentPlayer.Hand.Add(CardId.DawnPrayer);
             Assert.That(m.PlayCard(CardId.DawnPrayer, new Coord[0]), Is.True);
-            Assert.That(m.Weather, Is.Null);
+            Assert.That(m.Conditions, Is.EqualTo(new[] { CardId.Gale }), "the most recent goes first");
+            m.EndTurn();
+            m.CurrentPlayer.Hand.Add(CardId.DawnPrayer);
+            Assert.That(m.PlayCard(CardId.DawnPrayer, new Coord[0]), Is.True);
+            Assert.That(m.Conditions, Is.Empty);
 
             m.EndTurn();
             m.EndTurn();

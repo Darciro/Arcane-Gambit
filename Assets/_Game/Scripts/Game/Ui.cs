@@ -3,10 +3,13 @@ using ArcaneGambit.Rules;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace ArcaneGambit.Game
 {
+    public enum CursorKind { Default, Clickable, Attack, Unavailable, Wait, Drag }
+
     public static class Ui
     {
         public static readonly Color Parchment = Hex(0xECDFC4);
@@ -18,6 +21,8 @@ namespace ArcaneGambit.Game
         public static readonly Color Rubric = Hex(0x8E2F21);
         public static readonly Color RubricDark = Hex(0x5E1D14);
         public static readonly Color Cream = Hex(0xF3E8D2);
+        public static readonly Color InkFaded = Hex(0x6B5434);
+        public static readonly Color RubricLight = Hex(0xC0573F);
 
         public const float CardWidth = 248f;
         public const float CardHeight = 348f;
@@ -26,18 +31,27 @@ namespace ArcaneGambit.Game
 
         static TMP_FontAsset s_title, s_body, s_italic, s_fraktur;
         static Sprite s_panel, s_primary, s_secondary, s_solid, s_tile, s_highlight;
-        static Sprite s_modal, s_dark, s_danger, s_selection, s_glow;
+        static Sprite s_modal, s_dark, s_danger, s_selection, s_glow, s_menu, s_menuHover;
         static readonly Dictionary<string, Sprite> s_art = new Dictionary<string, Sprite>();
         static readonly Dictionary<string, Sprite> s_pills = new Dictionary<string, Sprite>();
         static int s_generation;
+        static readonly string[] CursorFiles = { "padrao", "clicavel", "ataque", "indisponivel", "aguardar", "arrastar" };
+        static readonly Vector2[] CursorHotspots =
+        {
+            new Vector2(1f, 1f), new Vector2(12f, 1f), new Vector2(16f, 16f),
+            new Vector2(1f, 1f), new Vector2(16f, 16f), new Vector2(15f, 14f),
+        };
+        static readonly Texture2D[] s_cursors = new Texture2D[CursorFiles.Length];
+        static CursorKind? s_cursor;
 
         // Domain reload is disabled in this project: statics must be cleared on every Play.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
+            s_cursor = null;
             s_title = s_body = s_italic = s_fraktur = null;
             s_panel = s_primary = s_secondary = s_solid = s_tile = s_highlight = null;
-            s_modal = s_dark = s_danger = s_selection = s_glow = null;
+            s_modal = s_dark = s_danger = s_selection = s_glow = s_menu = s_menuHover = null;
             s_art.Clear();
             s_pills.Clear();
             s_generation++;
@@ -47,6 +61,15 @@ namespace ArcaneGambit.Game
             new Color(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
 
         public static string ToHex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
+
+        public static void SetCursor(CursorKind kind)
+        {
+            if (s_cursor == kind) return;
+            int i = (int)kind;
+            if (s_cursors[i] == null) s_cursors[i] = Resources.Load<Texture2D>("Art/Cursors/png/" + CursorFiles[i] + "_32");
+            s_cursor = kind;
+            Cursor.SetCursor(s_cursors[i], CursorHotspots[i], CursorMode.Auto);
+        }
 
         public static string Roman(int n)
         {
@@ -138,6 +161,10 @@ namespace ArcaneGambit.Game
             : s_selection = Frame(new Color(Rubric.r, Rubric.g, Rubric.b, 0.07f), Rubric, 2, 0, 0);
         public static Sprite Glow => s_glow != null ? s_glow
             : s_glow = Frame(Color.clear, new Color(Rubric.r, Rubric.g, Rubric.b, 0.18f), 4, 0, 0);
+        public static Sprite MenuButton => s_menu != null ? s_menu : s_menu = Frame(Parchment, Ink, 2, 3, 1);
+        public static Sprite Framed => MenuButton;
+        public static Sprite MenuButtonHover => s_menuHover != null ? s_menuHover
+            : s_menuHover = Frame(Ink, Parchment, 0, 5, 1, solid: true);
 
         public static Sprite Pill(Color fill, Color line, int radius, float width = 1f)
         {
@@ -205,6 +232,8 @@ namespace ArcaneGambit.Game
             var go = new GameObject(name, typeof(RectTransform));
             var rt = (RectTransform)go.transform;
             rt.SetParent(parent, false);
+            // The board and the HUD are drawn by different cameras, which pick what they render by layer.
+            go.layer = parent.gameObject.layer;
             rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
             rt.pivot = new Vector2(0f, 1f);
             rt.anchoredPosition = new Vector2(x, -y);
@@ -366,6 +395,51 @@ namespace ArcaneGambit.Game
             button.colors = colors;
             button.onClick.AddListener(onClick);
             return button;
+        }
+
+        public static void OnHover(GameObject target, System.Action enter, System.Action exit)
+        {
+            var trigger = target.AddComponent<EventTrigger>();
+            var enterEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enterEntry.callback.AddListener(_ => enter());
+            var exitEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exitEntry.callback.AddListener(_ => exit());
+            trigger.triggers.Add(enterEntry);
+            trigger.triggers.Add(exitEntry);
+        }
+
+        public static void Dashed(RectTransform parent, Vector2 start, Vector2 end, Color color, float width, float dash,
+            float gap)
+        {
+            var delta = end - start;
+            float length = delta.magnitude;
+            var line = Rect(parent, "Dashes", 0f, 0f, length, width);
+            line.pivot = new Vector2(0f, 0.5f);
+            line.anchoredPosition = start;
+            line.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+            for (float d = 0f; d < length; d += dash + gap)
+                Image(line, "Dash", Solid, d, 0f, Mathf.Min(dash, length - d), width).color = color;
+        }
+
+        public static void DashedBox(RectTransform parent, float x, float y, float w, float h, Color color, float width,
+            float dash, float gap)
+        {
+            var tl = new Vector2(x, -y);
+            var tr = tl + new Vector2(w, 0f);
+            var br = tr + new Vector2(0f, -h);
+            var bl = tl + new Vector2(0f, -h);
+            Dashed(parent, tl, tr, color, width, dash, gap);
+            Dashed(parent, tr, br, color, width, dash, gap);
+            Dashed(parent, br, bl, color, width, dash, gap);
+            Dashed(parent, bl, tl, color, width, dash, gap);
+        }
+
+        public static Image Diamond(Transform parent, float centerX, float centerY, float size, Color color)
+        {
+            var diamond = Image(parent, "Diamond", Solid, centerX - size * 0.5f, centerY - size * 0.5f, size, size);
+            diamond.color = color;
+            Centered(diamond.rectTransform).localRotation = Quaternion.Euler(0f, 0f, 45f);
+            return diamond;
         }
 
         public static void Danger(Button button)

@@ -14,6 +14,7 @@ namespace ArcaneGambit.Rules
         public const int ShotRange = 3;
         public const int SightRange = 2;
         public const int FireballRange = 2;
+        public const int MaxConditions = 3;
         const int FortificationTurns = 4;
 
         public static readonly UnitType[] Recruitable =
@@ -39,6 +40,7 @@ namespace ArcaneGambit.Rules
         readonly List<LogEntry> _log = new List<LogEntry>();
         readonly List<MatchEvent> _events = new List<MatchEvent>();
         readonly List<CardId> _foresight = new List<CardId>();
+        readonly List<CardId> _conditions = new List<CardId>();
         int _nextUnitId = 1;
 
         public int Turn { get; private set; }
@@ -48,13 +50,16 @@ namespace ArcaneGambit.Rules
         public Phase Phase { get; private set; }
         public Side? Winner { get; private set; }
         public PendingCapture Pending { get; private set; }
-        public CardId? Weather { get; private set; }
         public CardId ForesightCard { get; private set; }
 
         public IReadOnlyList<Unit> Units => _units;
         public IReadOnlyList<Marker> Markers => _markers;
         public IReadOnlyList<LogEntry> Log => _log;
         public IReadOnlyList<CardId> ForesightOptions => _foresight;
+        /// <summary>Oldest first; their effects stack.</summary>
+        public IReadOnlyList<CardId> Conditions => _conditions;
+
+        public bool HasCondition(CardId card) => _conditions.Contains(card);
 
         public Player Get(Side side) => _players[(int)side];
         public Player CurrentPlayer => Get(Current);
@@ -105,12 +110,12 @@ namespace ArcaneGambit.Rules
             foreach (var m in source._markers)
                 _markers.Add(new Marker { Kind = m.Kind, Pos = m.Pos, Owner = m.Owner, ExpiresTurn = m.ExpiresTurn });
             _foresight.AddRange(source._foresight);
+            _conditions.AddRange(source._conditions);
             _nextUnitId = source._nextUnitId;
             Turn = source.Turn;
             Current = source.Current;
             Phase = source.Phase;
             Winner = source.Winner;
-            Weather = source.Weather;
             ForesightCard = source.ForesightCard;
 
             var pc = source.Pending;
@@ -187,9 +192,9 @@ namespace ArcaneGambit.Rules
             return true;
         }
 
-        bool BonusAllowed(Unit u) => Weather != CardId.Blizzard && Turn > u.BonusLockTurn;
+        bool BonusAllowed(Unit u) => !HasCondition(CardId.Blizzard) && Turn > u.BonusLockTurn;
 
-        bool ExtraStepAllowed(Unit u) => BonusAllowed(u) && Weather != CardId.Mud;
+        bool ExtraStepAllowed(Unit u) => BonusAllowed(u) && !HasCondition(CardId.Mud);
 
         bool CanStep(Unit u) => u.HasHorseshoes && u.Jumped && ExtraStepAllowed(u);
 
@@ -627,7 +632,7 @@ namespace ArcaneGambit.Rules
                 Emit(EventKind.MarkerRemoved, -1, _markers[i].Pos, _markers[i].Pos);
                 _markers.RemoveAt(i);
             }
-            if (roundStart && Weather == CardId.LightningStorm) MarkLightning();
+            if (roundStart && HasCondition(CardId.LightningStorm)) MarkLightning();
 
             var p = Get(side);
             int before = p.Morale;
@@ -699,10 +704,18 @@ namespace ArcaneGambit.Rules
                 to: mark.Value, flag: hit);
         }
 
-        void SetWeather(CardId? weather)
+        void AddCondition(CardId card)
         {
-            Weather = weather;
-            ClearLightning();
+            if (_conditions.Count == MaxConditions) RemoveCondition(_conditions[0], displaced: true);
+            _conditions.Add(card);
+        }
+
+        void RemoveCondition(CardId card, bool displaced)
+        {
+            _conditions.Remove(card);
+            if (card == CardId.LightningStorm) ClearLightning();
+            // Flag = pushed out by a new condition rather than dispelled.
+            AddLog(LogKind.WeatherCleared, Current, card: card, flag: displaced);
         }
 
         bool Draw(Player p)
@@ -761,16 +774,16 @@ namespace ArcaneGambit.Rules
                 && _units.Exists(u => u.HasBanner && u.Side == Current);
             if (p.Morale < info.Cost - (bannered ? 1 : 0)) return false;
             if (UsesOrder(card) && p.Orders <= 0) return false;
-            if (info.IsWeather) return Weather != card;
+            if (info.IsWeather) return !HasCondition(card);
             switch (card)
             {
                 case CardId.SeersOmen:
                 case CardId.ScoutsAhead:
                     return p.Deck.Count > 0;
                 case CardId.OracleEcho: return EchoOptions(p).Count > 0;
-                case CardId.ForcedMarch: return Weather != CardId.Blizzard;
+                case CardId.ForcedMarch: return !HasCondition(CardId.Blizzard);
                 case CardId.SupplyWagon: return !p.WagonReady;
-                case CardId.DawnPrayer: return Weather.HasValue || p.Deck.Count > 0;
+                case CardId.DawnPrayer: return _conditions.Count > 0 || p.Deck.Count > 0;
             }
             return PickCount(card) == 0 || CardTargets(card, Array.Empty<Coord>()).Count > 0;
         }
@@ -876,8 +889,8 @@ namespace ArcaneGambit.Rules
         {
             var result = new List<Coord>();
             if (shooter == null) return result;
-            int range = Weather == CardId.Gale ? Math.Max(1, ShotRange - 1) : ShotRange;
-            if (Weather == CardId.Fog) range = Math.Min(range, SightRange);
+            int range = HasCondition(CardId.Gale) ? Math.Max(1, ShotRange - 1) : ShotRange;
+            if (HasCondition(CardId.Fog)) range = Math.Min(range, SightRange);
             foreach (var d in dirs)
                 for (int step = 1; step <= range; step++)
                 {
@@ -885,7 +898,7 @@ namespace ArcaneGambit.Rules
                     if (!c.InBoard || BlocksShot(c)) break;
                     var occupant = At(c);
                     if (occupant == null) continue;
-                    bool seen = step <= SightRange || Weather != CardId.MoonlessNight || Observed(shooter.Side, c);
+                    bool seen = step <= SightRange || !HasCondition(CardId.MoonlessNight) || Observed(shooter.Side, c);
                     if (occupant.Side != shooter.Side && occupant.Type != UnitType.Sovereign && seen) result.Add(c);
                     break;
                 }
@@ -1033,16 +1046,12 @@ namespace ArcaneGambit.Rules
                     p.WagonReady = true;
                     break;
                 case CardId.DawnPrayer:
-                    if (Weather is CardId cleared)
-                    {
-                        SetWeather(null);
-                        AddLog(LogKind.WeatherCleared, Current, card: cleared);
-                    }
+                    if (_conditions.Count > 0) RemoveCondition(_conditions[_conditions.Count - 1], displaced: false);
                     else if (Draw(p)) AddLog(LogKind.CardDrawn, Current);
                     break;
 
                 default:
-                    if (CardCatalog.Get(card).IsWeather) SetWeather(card);
+                    if (CardCatalog.Get(card).IsWeather) AddCondition(card);
                     break;
             }
             return true;

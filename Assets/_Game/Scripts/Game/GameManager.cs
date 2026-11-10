@@ -1,17 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
+using ArcaneGambit.FX;
 using ArcaneGambit.Rules;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace ArcaneGambit.Game
 {
-    public sealed class GameManager : MonoBehaviour
+    public sealed partial class GameManager : MonoBehaviour
     {
+        public const string SceneName = "Main";
+        const string SandboxSceneName = "FX_Sandbox";
+
         const float StageWidth = 1920f;
         const float StageHeight = 1080f;
         static readonly Vector2 Stage = new Vector2(StageWidth, StageHeight);
@@ -27,11 +32,15 @@ namespace ArcaneGambit.Game
         const float OpponentPanelHeight = 290f, PlayerPanelHeight = 340f;
         const float ActionPanelHeight = 664f, DeckPanelHeight = 120f;
         const float WaitingAlpha = 0.5f;
+        const float CanvasDistance = 10f;
         const float TrailWidth = 2.4f, TrailDash = 7f, TrailGap = 6f, TrailHead = 9f, PreviewAlpha = 0.6f;
         const float TrailEmptyInset = 12f, TrailClearance = 2f;
         const float ToastX = 520f, ToastY = 92f, ToastWidth = 840f, ToastGap = 24f;
         const float ToastLife = 3f, ToastFade = 0.25f;
         const int MaxToasts = 3, DiscardColumns = 5;
+        const float DockWidth = 460f, DockRight = 40f, DockBottom = 28f, DockPadding = 24f, DockSlide = 500f;
+        const float PeekTime = 0.25f, PeekWidth = 300f, PeekHeight = 52f, ConfrontScrimAlpha = 0.58f, SpotAlpha = 0.34f;
+        const float OptionHeight = 141f, OptionGap = 14f, OptionCard = 89f, ReactionButtonHeight = 54f;
         static readonly Color OffTint = new Color(0.9f, 0.92f, 0.96f);
         static readonly Color ScrimColor = new Color(0.125f, 0.082f, 0.039f, 0.62f);
 
@@ -42,12 +51,13 @@ namespace ArcaneGambit.Game
         [SerializeField, Min(0f), Tooltip("How long the AI's next action is shown on the board before it happens")]
         float _aiIntentTime = 1.2f;
 
-        enum Mode { Idle, Unit, Recruit, Card }
+        enum Mode { Idle, Unit, Recruit, Card, Inspect }
 
         sealed class Piece
         {
             public int Id;
             public RectTransform Rt;
+            public RectTransform Holder;
             public Image Body;
             public CanvasGroup Group;
             public Image Shield;
@@ -68,7 +78,7 @@ namespace ArcaneGambit.Game
 
         sealed class HandCard
         {
-            public RectTransform Slot, Card;
+            public RectTransform Slot, Holder, Card;
             public Image Shadow;
             public float Tilt;
             public bool Selected, Off;
@@ -97,13 +107,28 @@ namespace ArcaneGambit.Game
         float _foresightScroll;
         bool _discardOpen, _paused, _confirmAbandon, _reviewing;
         Side _discardSide;
+        bool _peek;
+        float _peekShown, _dockX;
 
-        bool HumanTurn => !_awaitingStart && _turnBanner == null && _match.Phase == Phase.Maneuvers && _match.Current == _human;
+        // The banner only delays input; what is unaffordable must already show as disabled while it is up.
+        bool HumanOwnsTurn => !_awaitingStart && _match.Phase == Phase.Maneuvers && _match.Current == _human;
+        bool HumanTurn => HumanOwnsTurn && _turnBanner == null && _weatherNotices.Count == 0 && !FxLocked;
+        // A boom (FX_SPEC 5.1) holds the input and the AI until it has played.
+        bool FxLocked => _matchFx != null && _matchFx.Locked;
 
-        RectTransform _stage, _board, _piecesLayer, _markerLayer, _trailLayer, _previewLayer, _hand, _overlay, _overlayContent, _toasts;
+        RectTransform _stage, _piecesLayer, _markerLayer, _trailLayer, _previewLayer, _hand, _overlay, _overlayContent, _toasts;
+        RectTransform _focusLayer, _confront, _dock, _worldStage, _boardRig;
+        FxRoot _fx;
+        MatchFx _matchFx;
+        GraphicRaycaster _worldRaycaster, _hudRaycaster;
+        CanvasGroup _spotGroup, _confrontShade;
+        Image _overlayShade;
+        readonly Image[,] _spot = new Image[Match.Size, Match.Size];
         GameObject _backdrop;
         readonly List<RectTransform> _toastList = new List<RectTransform>();
         RectTransform _turnBanner;
+        readonly List<int> _weatherNotices = new List<int>();
+        CardId? _conditionView;
         readonly Image[,] _under = new Image[Match.Size, Match.Size];
         readonly Image[,] _hint = new Image[Match.Size, Match.Size];
         readonly TextMeshProUGUI[] _fileLabels = new TextMeshProUGUI[Match.Size];
@@ -112,10 +137,9 @@ namespace ArcaneGambit.Game
         readonly Dictionary<int, Piece> _pieces = new Dictionary<int, Piece>();
         readonly Dictionary<(Coord, MarkerKind), RectTransform> _markers = new Dictionary<(Coord, MarkerKind), RectTransform>();
         readonly HashSet<(Coord, Coord)> _trails = new HashSet<(Coord, Coord)>();
-        int _trailTurn;
         Coord? _hoverSquare;
         readonly ArmyPanel[] _armies = new ArmyPanel[2];
-        CanvasScaler _scaler;
+        CanvasScaler _scaler, _worldScaler;
         Vector2 _canvasSize;
         TextMeshProUGUI _phases, _turn, _actionStep, _actionHint, _deck, _deckCaption, _discard, _discardLast;
         RectTransform _actionSlot, _actionCells, _discardPile, _logEntries, _conditions;
@@ -128,7 +152,8 @@ namespace ArcaneGambit.Game
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Bootstrap()
         {
-            if (FindAnyObjectByType<GameManager>() != null) return;
+            string scene = SceneManager.GetActiveScene().name;
+            if ((scene != SceneName && scene != SandboxSceneName) || FindAnyObjectByType<GameManager>() != null) return;
             var host = GameObject.Find("GameManager");
             if (host == null) host = new GameObject("GameManager");
             host.AddComponent<GameManager>();
@@ -136,22 +161,59 @@ namespace ArcaneGambit.Game
 
         void Start()
         {
+            Ui.SetCursor(CursorKind.Default);
             BuildUi();
             NewMatch();
+            if (Debug.isDebugBuild && SceneManager.GetActiveScene().name == SandboxSceneName)
+                gameObject.AddComponent<FxDebugPanel>().Init(this);
+        }
+
+        internal Match CurrentMatch => _match;
+        internal MatchFx Fx => _matchFx;
+        internal FxDirector FxDirector => _fx != null ? _fx.Director : null;
+        internal float BoardScale => _boardRig.localScale.x;
+
+        internal Vector3 SquareWorld(Coord c) => _piecesLayer.TransformPoint(SquareCenter(c));
+
+        internal GameObject PieceObject(int unitId) => _pieces.TryGetValue(unitId, out var piece) ? piece.Holder.gameObject : null;
+
+        // Locking can happen halfway through Sync, so it only blocks input; the refresh waits for the unlock,
+        // which comes from the director's own Update. Modals keep their raycaster, so a pause still works meanwhile.
+        void OnFxLock(bool locked)
+        {
+            _worldRaycaster.enabled = _hudRaycaster.enabled = !locked;
+            Ui.SetCursor(locked ? CursorKind.Wait : CursorKind.Default);
+            if (locked) return;
+            Refresh();
+            ScheduleAi();
         }
 
         void Update()
         {
             float aspect = (float)Screen.width / Mathf.Max(1, Screen.height);
-            _scaler.matchWidthOrHeight = aspect >= StageWidth / StageHeight ? 1f : 0f;
+            _scaler.matchWidthOrHeight = _worldScaler.matchWidthOrHeight = aspect >= StageWidth / StageHeight ? 1f : 0f;
             var canvasSize = ((RectTransform)_scaler.transform).rect.size;
             if (canvasSize != _canvasSize)
             {
                 _canvasSize = canvasSize;
                 FitBoard(canvasSize);
-                if (_match != null) RefreshHistory(force: true);
+                if (_match != null)
+                {
+                    RefreshHistory(force: true);
+                    RefreshOverlay();
+                }
             }
             AnimateHand();
+            float peek = _peek ? 1f : 0f;
+            if (!Mathf.Approximately(_peekShown, peek))
+            {
+                _peekShown = Mathf.MoveTowards(_peekShown, peek, Time.deltaTime / PeekTime);
+                PosePeek();
+            }
+
+            // A clicked button keeps UI focus, and the UI module would click it again on Enter or Space.
+            var events = EventSystem.current;
+            if (events != null && events.currentSelectedGameObject != null) events.SetSelectedGameObject(null);
 
             var mouse = Mouse.current;
             var keyboard = Keyboard.current;
@@ -161,14 +223,92 @@ namespace ArcaneGambit.Game
                 ClearMode();
                 Refresh();
             }
+            else if (keyboard != null && !_paused) OnKeys(keyboard);
         }
 
-        void OnDestroy() => Time.timeScale = 1f;
+        void OnKeys(Keyboard keys)
+        {
+            if (FxLocked) return;
+            int step = keys.rightArrowKey.wasPressedThisFrame || keys.downArrowKey.wasPressedThisFrame ? 1
+                : keys.leftArrowKey.wasPressedThisFrame || keys.upArrowKey.wasPressedThisFrame ? -1 : 0;
+            bool enter = keys.enterKey.wasPressedThisFrame || keys.numpadEnterKey.wasPressedThisFrame;
+            bool space = keys.spaceKey.wasPressedThisFrame;
+            if (step == 0 && !enter && !space) return;
+
+            if (_match.Phase == Phase.GameOver && !_reviewing)
+            {
+                if (enter) NewMatch();
+            }
+            else if (_awaitingStart)
+            {
+                if (enter) OnStartMatch();
+            }
+            else if (_weatherNotices.Count > 0)
+            {
+                if (enter || space) DismissWeather();
+            }
+            else if (_conditionView != null)
+            {
+                if (enter || space) CloseCondition();
+            }
+            else if (_match.Phase == Phase.Reaction && _match.Pending.Defender.Side == _human)
+            {
+                if (step != 0) CycleReaction(step);
+                else if (enter && _reaction is CardId card) OnReaction(card);
+                else if (space) OnReaction(null);
+            }
+            else if (_match.Phase == Phase.Foresight && _match.Current == _human)
+            {
+                int columns = Mathf.Min(_match.ForesightOptions.Count, 4);
+                bool vertical = keys.upArrowKey.wasPressedThisFrame || keys.downArrowKey.wasPressedThisFrame;
+                if (step != 0)
+                {
+                    _foresightPick = Mathf.Clamp(_foresightPick + step * (vertical ? columns : 1), 0,
+                        _match.ForesightOptions.Count - 1);
+                    RefreshOverlay();
+                }
+                else if (enter) OnForesight();
+            }
+            else if (_discardOpen) { }
+            else if (space) OnEndTurn();
+            else if (!HumanTurn) { }
+            else if (enter) OnActionPrimary();
+            else CycleCard(step);
+        }
+
+        void CycleCard(int step)
+        {
+            int count = _match.Get(_human).Hand.Count;
+            if (count == 0) return;
+            int from = _mode == Mode.Card ? _cardIndex : step > 0 ? -1 : count;
+            int next = (from + step + count) % count;
+            if (_mode != Mode.Card || next != _cardIndex) OnCardClicked(next);
+        }
+
+        void CycleReaction(int step)
+        {
+            var applicable = _match.ReactionOptions();
+            var order = new List<CardId>();
+            foreach (var id in _match.Get(_human).Hand)
+                if (applicable.Contains(id) && !order.Contains(id)) order.Add(id);
+            if (order.Count == 0) return;
+            int from = _reaction is CardId current ? order.IndexOf(current) : -1;
+            _reaction = order[(Mathf.Max(from, 0) + step + order.Count) % order.Count];
+            RefreshOverlay();
+        }
+
+        void OnDestroy()
+        {
+            Time.timeScale = 1f;
+            if (FxDirector != null) FxDirector.LockChanged -= OnFxLock;
+        }
 
         void OnEscape()
         {
             if (_confirmAbandon) _confirmAbandon = false;
             else if (_paused) SetPaused(false);
+            else if (_peek) _peek = false;
+            else if (_conditionView != null) _conditionView = null;
             else if (_discardOpen) _discardOpen = false;
             else if (_mode != Mode.Idle) ClearMode();
             else if (!_awaitingStart && _match.Phase != Phase.GameOver) SetPaused(true);
@@ -181,11 +321,12 @@ namespace ArcaneGambit.Game
         {
             _paused = paused;
             _confirmAbandon = false;
-            Time.timeScale = paused ? 0f : 1f;
+            FxRoot.SetPaused(paused);
         }
 
         void NewMatch()
         {
+            if (FxDirector != null) FxDirector.StopAll();
             foreach (var p in _pieces.Values) Destroy(p.Rt.gameObject);
             _pieces.Clear();
             foreach (var rt in _markers.Values) Destroy(rt.gameObject);
@@ -199,7 +340,10 @@ namespace ArcaneGambit.Game
             _waiting = false;
             _handGroup.alpha = _rightColumn.alpha = 1f;
             SetPaused(false);
-            _discardOpen = _reviewing = false;
+            _discardOpen = _reviewing = _peek = false;
+            ResetCardFx();
+            ResetBoardFx();
+            _peekShown = 0f;
             _reaction = null;
             _foresightPick = 0;
             _foresightScroll = 0f;
@@ -208,6 +352,8 @@ namespace ArcaneGambit.Game
             foreach (var toast in _toastList) Destroy(toast.gameObject);
             _toastList.Clear();
             _turnBanner = null;
+            _weatherNotices.Clear();
+            _conditionView = null;
 
             int seed = _seed != 0 ? _seed : System.Environment.TickCount;
             _match = Match.CreateDefault(seed);
@@ -256,10 +402,11 @@ namespace ArcaneGambit.Game
                     break;
             }
 
+            bool again = _mode == Mode.Inspect && _selected == unit;
             ClearMode();
-            if (unit != null && unit.Side == _match.Current)
+            if (unit != null && (unit.Side == _match.Current || !again))
             {
-                _mode = Mode.Unit;
+                _mode = unit.Side == _match.Current ? Mode.Unit : Mode.Inspect;
                 _selected = unit;
             }
             Refresh();
@@ -286,6 +433,7 @@ namespace ArcaneGambit.Game
                 _card = _match.CurrentPlayer.Hand[index];
             }
             Refresh();
+            if (index < _handCards.Count && _handCards[index].Off) PlayInvalidFx(index);
         }
 
         void OnActionPrimary()
@@ -315,6 +463,8 @@ namespace ArcaneGambit.Game
         void OnReaction(CardId? card)
         {
             _reaction = null;
+            _peek = false;
+            _peekShown = 0f;
             _match.React(card);
             Sync();
         }
@@ -345,11 +495,13 @@ namespace ArcaneGambit.Game
         {
             _awaitingStart = false;
             Sync();
+            PlayMatchStartFx();
         }
 
         void ScheduleAi()
         {
-            if (_aiStep == null && !_awaitingStart && _turnBanner == null && _ai.HasDecision(_match))
+            if (_aiStep == null && !_awaitingStart && _turnBanner == null && _weatherNotices.Count == 0 && !FxLocked
+                && _ai.HasDecision(_match))
                 _aiStep = StartCoroutine(AiStepRoutine());
         }
 
@@ -380,10 +532,15 @@ namespace ArcaneGambit.Game
 
         void Sync()
         {
+            ClaimBoardCaptures();
             foreach (var e in _match.DrainEvents())
             {
                 switch (e.Kind)
                 {
+                    // Trails belong to the turn that made them: they vanish once the turn passes.
+                    case EventKind.TurnStarted:
+                        ClearTrails();
+                        break;
                     case EventKind.Moved:
                     case EventKind.Retreated:
                     case EventKind.Intercepted:
@@ -397,7 +554,7 @@ namespace ArcaneGambit.Game
                         if (_pieces.TryGetValue(e.UnitId, out var captured))
                         {
                             _pieces.Remove(e.UnitId);
-                            PlayCapture(captured);
+                            if (!DeferCapture(e.To, captured)) PlayCapture(captured);
                         }
                         break;
                     case EventKind.Recruited:
@@ -407,10 +564,13 @@ namespace ArcaneGambit.Game
                         if (_pieces.TryGetValue(e.UnitId, out var blocked)) PlayBlocked(blocked, e.From, e.To);
                         break;
                 }
+                _matchFx.OnEvent(e, _match);
             }
             SyncPieces();
             ProcessLog();
+            ReleaseUnpresented();
             Refresh();
+            FlushCardFx();
             ScheduleAi();
         }
 
@@ -421,10 +581,16 @@ namespace ArcaneGambit.Game
             for (; _logSeen < log.Count; _logSeen++)
             {
                 var e = log[_logSeen];
+                _matchFx.OnLog(e, _match);
+                QueueCardFx(e);
+                QueueBoardFx(e);
                 switch (e.Kind)
                 {
                     case LogKind.Preparation:
                         ShowTurnBanner(e);
+                        break;
+                    case LogKind.CardPlayed when CardCatalog.Get(e.Card).IsWeather:
+                        _weatherNotices.Add(_logSeen);
                         break;
                     case LogKind.Blocked:
                     case LogKind.Retreated:
@@ -465,7 +631,7 @@ namespace ArcaneGambit.Game
                 if (_markers.ContainsKey(key)) continue;
                 var rt = CreateMarker(m);
                 _markers[key] = rt;
-                StartCoroutine(PopRoutine(rt));
+                PlayMarkerFx(m, rt);
             }
             var fallen = new List<(Coord, MarkerKind)>();
             foreach (var key in _markers.Keys) if (!standing.Contains(key)) fallen.Add(key);
@@ -482,9 +648,11 @@ namespace ArcaneGambit.Game
             var rt = Ui.Rect(_markerLayer, $"{m.Kind} {m.Pos}", 0, 0, Square, Square);
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = SquareCenter(m.Pos);
+            // Feel animates the holder; the root keeps the board's own pop.
+            var holder = Ui.Centered(Ui.Rect(rt, "Holder", 0, 0, Square, Square));
             if (m.Kind == MarkerKind.Palisade)
             {
-                Ui.Image(rt, "Palisade", Ui.Art("Palisade"), 0, 0, Square, Square);
+                Ui.Image(holder, "Palisade", Ui.Art("Palisade"), 0, 0, Square, Square);
                 return rt;
             }
             var (fill, kind) = m.Kind switch
@@ -494,10 +662,16 @@ namespace ArcaneGambit.Game
                 MarkerKind.Smoke => (new Color(0.55f, 0.55f, 0.55f, 0.4f), CardKind.Reaction),
                 _ => (new Color(Ui.Rubric.r, Ui.Rubric.g, Ui.Rubric.b, 0.28f), CardKind.Condition),
             };
-            Ui.Image(rt, "Fill", Ui.Solid, 3, 3, Square - 6, Square - 6).color = fill;
-            var badge = Ui.Image(rt, "Badge", Ui.Art("Kind_Badge"), 4, 4, 26, 26);
+            Ui.Image(holder, "Fill", Ui.Solid, 3, 3, Square - 6, Square - 6).color = fill;
+            var badge = Ui.Image(holder, "Badge", Ui.Art("Kind_Badge"), 4, 4, 26, 26);
             Ui.Image(badge.transform, "Icon", Ui.KindIcon(kind), 5, 5, 16, 16).color =
                 m.Kind == MarkerKind.Stakes || m.Kind == MarkerKind.Lightning ? Ui.Rubric : Ui.Ink;
+            if (m.Kind == MarkerKind.Lightning && _markRing != null)
+            {
+                var ring = Ui.Image(rt, "Ring", _markRing, 0, 0, Square, Square);
+                Ui.Centered(ring.rectTransform);
+                ring.color = Ui.Rubric;
+            }
             return rt;
         }
 
@@ -534,7 +708,9 @@ namespace ArcaneGambit.Game
                 + $"{Tab("ui.phase.maneuvers", maneuvers && !_awaitingStart)}  ·  "
                 + $"{Tab("ui.phase.confrontation", _match.Phase == Phase.Reaction)}  ·  "
                 + Tab("ui.phase.end", false);
-            _turn.text = Loc.Format("ui.turnOf", _match.Turn, Loc.SideName(_match.Current));
+            _turn.text = _match.Phase == Phase.Reaction
+                ? Loc.Format("ui.turnAttacks", _match.Turn, Loc.SideName(_match.Pending.Attacker.Side))
+                : Loc.Format("ui.turnOf", _match.Turn, Loc.SideName(_match.Current));
             bool review = _match.Phase == Phase.GameOver && _reviewing;
             _endTurn.GetComponentInChildren<TextMeshProUGUI>().text = Loc.Get(review ? "ui.gameOver.show" : "ui.endTurn");
             _endTurn.interactable = HumanTurn || review;
@@ -587,9 +763,9 @@ namespace ArcaneGambit.Game
             for (int i = 0; i < Match.Recruitable.Length; i++)
             {
                 var type = Match.Recruitable[i];
-                bool can = HumanTurn && _match.CanRecruit(type);
-                ui.RecruitButtons[i].interactable = can;
-                ui.RecruitGroups[i].alpha = can || !HumanTurn ? 1f : 0.45f;
+                bool allowed = HumanOwnsTurn && _match.CanRecruit(type);
+                ui.RecruitButtons[i].interactable = allowed && HumanTurn;
+                ui.RecruitGroups[i].alpha = allowed || !HumanOwnsTurn ? 1f : 0.45f;
                 ui.RecruitHighlights[i].enabled = choosing && _recruitType == type;
             }
         }
@@ -630,6 +806,11 @@ namespace ArcaneGambit.Game
                     foreach (var c in _match.MoveTargets(_selected)) Mark(_hint, c, "Marker_Move");
                     foreach (var c in _match.CaptureTargets(_selected)) Mark(_hint, c, "Marker_Target");
                     break;
+                case Mode.Inspect:
+                    Mark(_under, _selected.Pos, "Marker_Selected");
+                    foreach (var c in _match.Reach(_selected, captures: false)) Mark(_hint, c, "Marker_Move");
+                    foreach (var c in _match.Reach(_selected, captures: true)) Mark(_hint, c, "Marker_Target");
+                    break;
                 case Mode.Recruit:
                     foreach (var c in _match.RecruitSquares()) Mark(_hint, c, "Marker_Recruit");
                     break;
@@ -651,16 +832,9 @@ namespace ArcaneGambit.Game
             img.enabled = true;
         }
 
-        // The trails of a turn stay up until the next player acts, so the opponent's moves can still be read.
         void AddTrail(Coord from, Coord to, bool capture)
         {
-            if (from == to) return;
-            if (_trailTurn != _match.Turn)
-            {
-                ClearTrails();
-                _trailTurn = _match.Turn;
-            }
-            if (_trails.Add((from, to))) DrawTrail(_trailLayer, from, to, capture, 1f);
+            if (from != to && _trails.Add((from, to))) DrawTrail(_trailLayer, from, to, capture, 1f);
         }
 
         void ClearTrails()
@@ -746,13 +920,13 @@ namespace ArcaneGambit.Game
                 var tr = tl + new Vector2(Square - 8f, 0f);
                 var br = tr + new Vector2(0f, 8f - Square);
                 var bl = tl + new Vector2(0f, 8f - Square);
-                Dashed(group, tl, tr, ink, 1.2f, 4f, 4f);
-                Dashed(group, tr, br, ink, 1.2f, 4f, 4f);
-                Dashed(group, br, bl, ink, 1.2f, 4f, 4f);
-                Dashed(group, bl, tl, ink, 1.2f, 4f, 4f);
+                Ui.Dashed(group, tl, tr, ink, 1.2f, 4f, 4f);
+                Ui.Dashed(group, tr, br, ink, 1.2f, 4f, 4f);
+                Ui.Dashed(group, br, bl, ink, 1.2f, 4f, 4f);
+                Ui.Dashed(group, bl, tl, ink, 1.2f, 4f, 4f);
             }
             var rubric = new Color(Ui.Rubric.r, Ui.Rubric.g, Ui.Rubric.b, alpha);
-            if (Vector2.Dot(tip - start, dir) > 1f) Dashed(group, tip, start, rubric, TrailWidth, TrailDash, TrailGap);
+            if (Vector2.Dot(tip - start, dir) > 1f) Ui.Dashed(group, tip, start, rubric, TrailWidth, TrailDash, TrailGap);
             ArrowHead(group, tip, dir, rubric);
         }
 
@@ -770,18 +944,6 @@ namespace ArcaneGambit.Game
                 rt.anchoredPosition = tip;
                 rt.localRotation = Quaternion.Euler(0f, 0f, angle + spread);
             }
-        }
-
-        static void Dashed(RectTransform parent, Vector2 start, Vector2 end, Color color, float width, float dash, float gap)
-        {
-            var delta = end - start;
-            float length = delta.magnitude;
-            var line = Ui.Rect(parent, "Dashes", 0f, 0f, length, width);
-            line.pivot = new Vector2(0f, 0.5f);
-            line.anchoredPosition = start;
-            line.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
-            for (float d = 0f; d < length; d += dash + gap)
-                Ui.Image(line, "Dash", Ui.Solid, d, 0f, Mathf.Min(dash, length - d), width).color = color;
         }
 
         void HoverSquare(Coord c, bool on)
@@ -813,17 +975,22 @@ namespace ArcaneGambit.Game
                 var slot = Ui.Image(_hand, "Slot", Ui.Solid, start + step * i, 0f, w, h, raycast: true);
                 slot.color = Color.clear;
 
-                var card = Ui.Card(slot.transform, info, HandScale);
+                // Feel springs the holder (pivot at the card's foot); the hand's own pose moves the card inside it.
+                var holder = Ui.Rect(slot.transform, "Holder", 0f, 0f, w, h);
+                holder.pivot = new Vector2(0.5f, 0f);
+                holder.anchoredPosition = new Vector2(w * 0.5f, -h);
+                var card = Ui.Card(holder, info, HandScale);
                 card.pivot = new Vector2(0.5f, 0f);
                 var graphics = card.GetComponentsInChildren<Graphic>();
                 bool selected = _mode == Mode.Card && _cardIndex == i;
                 var c = new HandCard
                 {
                     Slot = slot.rectTransform,
+                    Holder = holder,
                     Card = card,
                     Tilt = -HandTilt * (i - middle),
                     Selected = selected,
-                    Off = HumanTurn && !_match.CanPlay(info.Id),
+                    Off = HumanOwnsTurn && !_match.CanPlay(info.Id),
                     Lift = i == _hoveredCard ? 1f : 0f,
                     Graphics = graphics,
                     Colors = System.Array.ConvertAll(graphics, g => g.color),
@@ -839,7 +1006,7 @@ namespace ArcaneGambit.Game
                 var button = slot.gameObject.AddComponent<Button>();
                 button.transition = Selectable.Transition.None;
                 button.onClick.AddListener(() => OnCardClicked(index));
-                OnHover(slot.gameObject, () => HoverHandCard(index, true), () => HoverHandCard(index, false));
+                Ui.OnHover(slot.gameObject, () => HoverHandCard(index, true), () => HoverHandCard(index, false));
             }
             OrderHand();
         }
@@ -849,6 +1016,9 @@ namespace ArcaneGambit.Game
             if (on) _hoveredCard = index;
             else if (_hoveredCard == index) _hoveredCard = -1;
             OrderHand();
+            bool off = index < _handCards.Count && _handCards[index].Off;
+            Ui.SetCursor(!on ? CursorKind.Default : off ? CursorKind.Unavailable : CursorKind.Clickable);
+            if (on) PlayHandFx(FxCueId.CardHover, index);
         }
 
         void OrderHand()
@@ -885,17 +1055,6 @@ namespace ArcaneGambit.Game
             if (!c.Off) return;
             for (int i = 0; i < c.Graphics.Length; i++)
                 c.Graphics[i].color = Color.Lerp(c.Colors[i] * OffTint, c.Colors[i], t);
-        }
-
-        static void OnHover(GameObject target, System.Action enter, System.Action exit)
-        {
-            var trigger = target.AddComponent<EventTrigger>();
-            var enterEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-            enterEntry.callback.AddListener(_ => enter());
-            var exitEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-            exitEntry.callback.AddListener(_ => exit());
-            trigger.triggers.Add(enterEntry);
-            trigger.triggers.Add(exitEntry);
         }
 
         void RefreshAction()
@@ -953,19 +1112,25 @@ namespace ArcaneGambit.Game
                     hint = Loc.Get(u.RecruitedTurn == _match.Turn ? "ui.action.hintResting"
                         : p.Orders <= 0 && p.BonusMoves <= 0 ? "ui.action.hintNoOrders"
                         : "ui.action.hintUnit");
-                    var gear = new List<string>();
-                    if (u.Protection > 0) gear.Add(Loc.Get("ui.action.protection"));
-                    if (u.RangedProtection > 0) gear.Add(Loc.Format("ui.action.rangedProtection", u.RangedProtection));
-                    if (u.HasHammer) gear.Add(Loc.Get("ui.action.hammer"));
-                    if (u.HasHorseshoes) gear.Add(Loc.Get("ui.action.horseshoes"));
-                    if (u.HasLance) gear.Add(Loc.Get("ui.action.lance"));
-                    if (u.HasBanner) gear.Add(Loc.Get("ui.action.banner"));
                     cells.Add((Loc.Get("ui.cell.moves"), _match.MoveTargets(u).Count.ToString(),
                         Loc.Get("ui.cell.movesSub"), false));
                     cells.Add((Loc.Get("ui.cell.captures"), _match.CaptureTargets(u).Count.ToString(),
                         Loc.Get("ui.cell.capturesSub"), false));
-                    cells.Add((Loc.Get("ui.cell.gear"),
-                        gear.Count > 0 ? string.Join(" · ", gear) : Loc.Get("ui.action.none"), "", false));
+                    cells.Add(GearCell(u));
+                    break;
+                }
+                case Mode.Inspect:
+                {
+                    var u = _selected;
+                    step = Loc.Get("ui.action.enemyTitle");
+                    UnitPlate(u.Type, u.Side, "ui.plate.enemyUnit");
+                    hint = Loc.Get("ui.action.hintEnemy");
+                    var threats = _match.Reach(u, captures: true);
+                    cells.Add((Loc.Get("ui.cell.reach"), _match.Reach(u, captures: false).Count.ToString(),
+                        Loc.Get("ui.cell.reachSub"), false));
+                    cells.Add((Loc.Get("ui.cell.threats"), threats.Count.ToString(), Loc.Get("ui.cell.threatsSub"),
+                        threats.Count > 0));
+                    cells.Add(GearCell(u));
                     break;
                 }
                 case Mode.Recruit:
@@ -1076,6 +1241,18 @@ namespace ArcaneGambit.Game
             };
         }
 
+        static (string label, string value, string sub, bool marked) GearCell(Unit u)
+        {
+            var gear = new List<string>();
+            if (u.Protection > 0) gear.Add(Loc.Get("ui.action.protection"));
+            if (u.RangedProtection > 0) gear.Add(Loc.Format("ui.action.rangedProtection", u.RangedProtection));
+            if (u.HasHammer) gear.Add(Loc.Get("ui.action.hammer"));
+            if (u.HasHorseshoes) gear.Add(Loc.Get("ui.action.horseshoes"));
+            if (u.HasLance) gear.Add(Loc.Get("ui.action.lance"));
+            if (u.HasBanner) gear.Add(Loc.Get("ui.action.banner"));
+            return (Loc.Get("ui.cell.gear"), gear.Count > 0 ? string.Join(" · ", gear) : Loc.Get("ui.action.none"), "", false);
+        }
+
         void UnitPlate(UnitType type, Side side, string kindKey) =>
             Ui.Plate(_actionSlot, Loc.UnitName(type), Ui.UnitArt(type, side), Loc.Get(kindKey), Loc.UnitText(type),
                 ActionCardScale);
@@ -1181,15 +1358,33 @@ namespace ArcaneGambit.Game
 
         void RefreshOverlay()
         {
-            for (int i = _overlayContent.childCount - 1; i >= 0; i--) Destroy(_overlayContent.GetChild(i).gameObject);
+            foreach (var layer in new[] { _overlayContent, _confront, _focusLayer })
+                for (int i = layer.childCount - 1; i >= 0; i--) Destroy(layer.GetChild(i).gameObject);
+            foreach (var spot in _spot) spot.enabled = false;
+            _dock = null;
+            _confrontShade = null;
             // TMP measures text only once awake, so the builders below need an active hierarchy.
             _overlay.gameObject.SetActive(true);
-            bool modal = true, discard = false;
+            bool modal = true, discard = false, confront = false;
 
-            if (_match.Phase == Phase.GameOver && !_reviewing) BuildGameOver();
+            if (_match.Phase == Phase.GameOver && !_reviewing)
+            {
+                BuildGameOver();
+                PlayGameOverFx();
+            }
             else if (_awaitingStart) BuildIntro();
-            else if (_match.Phase == Phase.Reaction && _match.Pending.Defender.Side == _human) BuildReaction();
-            else if (_match.Phase == Phase.Foresight && _match.Current == _human) BuildForesight();
+            else if (_weatherNotices.Count > 0) BuildCondition(_match.Log[_weatherNotices[0]].Card, notice: true);
+            else if (_match.Phase == Phase.Reaction && _match.Pending.Defender.Side == _human)
+            {
+                BuildConfront();
+                confront = true;
+            }
+            else if (_match.Phase == Phase.Foresight && _match.Current == _human)
+            {
+                BuildForesight();
+                PlayForesightFx();
+            }
+            else if (_conditionView is CardId viewed && _match.HasCondition(viewed)) BuildCondition(viewed, notice: false);
             else if (_discardOpen) discard = true;
             else modal = false;
             if (discard) BuildDiscard();
@@ -1205,6 +1400,7 @@ namespace ArcaneGambit.Game
                 }
             }
             _overlay.gameObject.SetActive(modal || _paused);
+            _overlayShade.enabled = !confront || _paused;
             _backdrop.SetActive(discard && !_paused);
         }
 
@@ -1310,12 +1506,6 @@ namespace ArcaneGambit.Game
             }
         }
 
-        static void Pips(RectTransform parent, float x, float y, int on, float size, float gap)
-        {
-            for (int i = 0; i < Match.MaxMorale; i++)
-                Ui.Image(parent, "Pip", Ui.Art(i < on ? "Pip_On" : "Pip_Off"), x + i * (size + gap), y, size, size);
-        }
-
         static Image Chip(RectTransform parent, string text, float x, float y)
         {
             var chip = Ui.Sliced(parent, "Chip",
@@ -1366,7 +1556,7 @@ namespace ArcaneGambit.Game
                 Disabled(FitButton(panel, Loc.Get("ui.intro.rules"), false, 56f, 22f, 28f, () => { })));
         }
 
-        void BuildReaction()
+        void BuildConfront()
         {
             var pc = _match.Pending;
             var defender = _match.Get(pc.Defender.Side);
@@ -1377,102 +1567,336 @@ namespace ArcaneGambit.Game
             if (_reaction == null || !applicable.Contains(_reaction.Value))
                 _reaction = applicable.Count > 0 ? applicable[0] : (CardId?)null;
 
-            const float w = 1080f, h = 862f, optionWidth = 226f, optionHeight = 364f, optionGap = 24f;
-            var panel = OverlayPanel(w, h);
-            Eyebrow(panel, Loc.Get("ui.reaction.eyebrow"), 40f);
-            Title(panel, Loc.Format("ui.reaction.title", Loc.Army(pc.Defender.Side)), 72f, 52f);
-            Combatant(panel, pc.Attacker, w * 0.5f - 199f, Loc.Format("ui.reaction.attacker", Loc.Army(pc.Attacker.Side)), false);
-            Combatant(panel, pc.Defender, w * 0.5f + 199f, Loc.Get("ui.reaction.yourUnit"), true);
-            Arrow(panel, w * 0.5f - 90f, 202f, 180f);
-            Ui.Text(panel, Loc.Get(pc.Advances ? "ui.reaction.tries" : "ui.reaction.shoots"), Ui.ItalicFont, 18f, Ui.InkBody,
-                w * 0.5f - 100f, 218f, 200f, 24f, TextAlignmentOptions.Top);
+            FocusBoard(pc);
 
-            var morale = Ui.Rect(panel, "Morale", 0f, 338f, 0f, 26f);
-            var label = Ui.Label(morale, Loc.Get("ui.morale"), 0f, 2f, 0f, 24f);
-            label.fontSize = 18f;
-            Fit(label);
-            float x = label.rectTransform.sizeDelta.x + 10f;
-            Pips(morale, x, 3f, defender.Morale, 18f, 4f);
-            x += Match.MaxMorale * 22f + 6f;
-            var value = Fit(Ui.Text(morale, Loc.Format("ui.moraleValue", defender.Morale, Match.MaxMorale) + "   ·   "
-                + Loc.Get("ui.reaction.prompt"), Ui.BodyFont, 18f, Ui.InkText, x, 0f, 0f, 26f));
-            morale.sizeDelta = new Vector2(x + value.rectTransform.sizeDelta.x, 26f);
-            Row(panel, 338f, 0f, morale);
+            var canvas = ((RectTransform)_scaler.transform).rect.size;
+            float scale = _boardRig.localScale.x;
+            float boardLeft = canvas.x * 0.5f + _boardRig.anchoredPosition.x;
+            float holeLeft = boardLeft - 14f, holeTop = HeaderHeight + 2f;
+            float holeBottom = -_boardRig.anchoredPosition.y + BoardSize * scale + 2f;
 
-            float optionX = (w - (cards.Count * optionWidth + (cards.Count - 1) * optionGap)) * 0.5f;
-            foreach (var id in cards)
-            {
-                var info = CardCatalog.Get(id);
-                bool ok = applicable.Contains(id), chosen = ok && _reaction == id;
-                if (chosen) Ui.Sliced(panel, "Glow", Ui.Glow, optionX - 4f, 376f, optionWidth + 8f, optionHeight + 8f);
-                var option = Ui.Sliced(panel, "Option", chosen ? Ui.Selection : Ui.Solid, optionX, 380f, optionWidth,
-                    optionHeight, raycast: ok);
-                if (!chosen) option.color = Color.clear;
-                var card = Ui.Card(option.transform, info, ModalCardScale);
-                card.anchoredPosition = new Vector2(12f, -12f);
-                if (!ok) card.gameObject.AddComponent<CanvasGroup>().alpha = 0.45f;
-                var status = Ui.Text(option.transform,
-                    Loc.Get(chosen ? "ui.reaction.selected" : ok ? "ui.reaction.applicable" : "ui.reaction.notApplicable"),
-                    Ui.TitleFont, 17f, ok ? Ui.Rubric : Ui.InkSoft, 0f, 304f, optionWidth, 22f, TextAlignmentOptions.Top);
-                status.characterSpacing = 6f;
-                Ui.Text(option.transform, ReactionNote(id, ok, pc), Ui.BodyFont, 18f, Ui.InkText, 12f, 326f,
-                    optionWidth - 24f, 40f, TextAlignmentOptions.Top);
-                if (ok)
-                {
-                    var button = option.gameObject.AddComponent<Button>();
-                    button.transition = Selectable.Transition.None;
-                    var pick = id;
-                    button.onClick.AddListener(() =>
-                    {
-                        _reaction = pick;
-                        RefreshOverlay();
-                    });
-                }
-                optionX += optionWidth + optionGap;
-            }
+            var shade = Ui.Stretch(Ui.Rect(_confront, "Shade", 0, 0, 0, 0));
+            _confrontShade = shade.gameObject.AddComponent<CanvasGroup>();
+            ConfrontScrim(shade, new Vector2(0f, 1f), Vector2.one, new Vector2(0f, -holeTop), Vector2.zero);
+            ConfrontScrim(shade, Vector2.zero, Vector2.up, Vector2.zero, new Vector2(holeLeft, -holeTop));
+            ConfrontScrim(shade, Vector2.zero, Vector2.right, new Vector2(holeLeft, 0f), new Vector2(0f, canvas.y - holeBottom));
 
-            var pass = FitButton(panel, Loc.Get("ui.reaction.pass"), false, 58f, 22f, 30f, () => OnReaction(null));
-            if (_reaction is CardId selected)
-            {
-                var play = FitButton(panel, Loc.Format("ui.reaction.play", Loc.CardName(selected),
-                    _match.ReactionCost(selected)), true, 58f, 22f, 30f, () => OnReaction(selected));
-                Row(panel, 765f, 16f, play, pass);
-            }
-            else Row(panel, 765f, 16f, pass);
+            PeekButton(boardLeft + BoardSize * scale * 0.5f - canvas.x * 0.5f, holeBottom + 14f);
+            Dock(pc, defender, cards, applicable, canvas.y - ColumnTop - DockBottom);
+            PosePeek();
         }
 
-        static void Combatant(RectTransform panel, Unit unit, float center, string caption, bool target)
+        static void ConfrontScrim(RectTransform parent, Vector2 min, Vector2 max, Vector2 offsetMin, Vector2 offsetMax)
         {
-            const float y = 164f, size = 88f;
-            if (target) Ui.Image(panel, "Target", Ui.Art("Marker_Target"), center - 52f, y - 8f, 104f, 104f);
+            var scrim = Ui.Image(parent, "Scrim", Ui.Solid, 0f, 0f, 0f, 0f, raycast: true);
+            scrim.color = new Color(ScrimColor.r, ScrimColor.g, ScrimColor.b, ConfrontScrimAlpha);
+            var rt = scrim.rectTransform;
+            rt.anchorMin = min;
+            rt.anchorMax = max;
+            rt.offsetMin = offsetMin;
+            rt.offsetMax = offsetMax;
+        }
+
+        void PeekButton(float centerX, float top)
+        {
+            RectTransform Place(RectTransform rt, float dx, float dy)
+            {
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+                rt.anchoredPosition = new Vector2(centerX - PeekWidth * 0.5f + dx, -(top + dy));
+                return rt;
+            }
+
+            var shadow = Ui.Sliced(_confront, "Shadow", Ui.Art("Card_Shadow"), 0f, 0f, PeekWidth + 28f, PeekHeight + 22f);
+            shadow.pixelsPerUnitMultiplier = 60f / 18f;
+            shadow.color = new Color(1f, 1f, 1f, 0.7f);
+            Place(shadow.rectTransform, -14f, 4f);
+            var pill = Ui.Sliced(_confront, "Peek", Ui.Pill(Ui.Ink, Ui.InkText, 26, 1.5f), 0f, 0f, PeekWidth, PeekHeight,
+                raycast: true);
+            Place(pill.rectTransform, 0f, 0f);
+
+            string label = Loc.Get(_peek ? "ui.reaction.back" : "ui.reaction.peek");
+            var text = Ui.Text(pill.transform, label, Ui.TitleFont, 20f, Ui.Cream, 0f, 0f, 0f, PeekHeight,
+                TextAlignmentOptions.MidlineLeft);
+            text.characterSpacing = 5f;
+            Fit(text);
+            const float icon = 22f, iconGap = 10f;
+            float left = (PeekWidth - icon - iconGap - text.rectTransform.sizeDelta.x) * 0.5f;
+            Ui.Image(pill.transform, "Eye", Ui.Art("Icon_Eye"), left, (PeekHeight - icon) * 0.5f, icon, icon).color = Ui.Cream;
+            text.rectTransform.anchoredPosition = new Vector2(left + icon + iconGap, 0f);
+
+            var button = Ui.MakeButton(pill, () =>
+            {
+                _peek = !_peek;
+                RefreshOverlay();
+            });
+            button.transition = Selectable.Transition.None;
+        }
+
+        void PosePeek()
+        {
+            float t = Mathf.SmoothStep(0f, 1f, _peekShown);
+            if (_dock != null) _dock.anchoredPosition = new Vector2(_dockX + DockSlide * t, _dock.anchoredPosition.y);
+            if (_confrontShade != null)
+            {
+                _confrontShade.alpha = 1f - t;
+                _confrontShade.blocksRaycasts = !_peek;
+            }
+            _spotGroup.alpha = 1f - t;
+        }
+
+        void Dock(PendingCapture pc, Player defender, List<CardId> cards, List<CardId> applicable, float height)
+        {
+            const float w = DockWidth, x = DockPadding, inner = DockWidth - DockPadding * 2f, bandHeight = 46f;
+            var dock = _dock = Ui.Rect(_confront, "Dock", 0f, 0f, w, height);
+            dock.anchorMin = dock.anchorMax = Vector2.one;
+            _dockX = -(w + DockRight);
+            dock.anchoredPosition = new Vector2(_dockX, -ColumnTop);
+            Ui.Sliced(dock, "Glow", Ui.Glow, -4f, -4f, w + 8f, height + 8f);
+            var panel = Ui.Modal(dock, 0f, 0f, w, height);
+
+            var band = Ui.Image(panel, "Band", Ui.Solid, 2f, 2f, w - 4f, bandHeight);
+            band.color = Ui.Rubric;
+            var bandLabel = Ui.Label(band.transform, Loc.Get("ui.reaction.header"), x - 2f, 0f, 280f, bandHeight,
+                TextAlignmentOptions.MidlineLeft);
+            bandLabel.fontSize = 17f;
+            bandLabel.characterSpacing = 16f;
+            bandLabel.color = Ui.Cream;
+            Ui.Text(band.transform, Loc.Get("ui.reaction.yours"), Ui.ItalicFont, 18f, Ui.Cream, 0f, 0f, w - 4f - (x - 2f),
+                bandHeight, TextAlignmentOptions.MidlineRight);
+
+            Ui.Text(panel, Loc.Get("ui.reaction.title"), Ui.TitleFont, 34f, Ui.InkText, x, 62f, inner, 42f);
+
+            const float combatantY = 114f, arrowWidth = 70f, sideWidth = (inner - arrowWidth - 16f) * 0.5f;
+            Combatant(panel, pc.Attacker, x + sideWidth * 0.5f, combatantY, Loc.Get("ui.reaction.attacker"), false);
+            Combatant(panel, pc.Defender, x + inner - sideWidth * 0.5f, combatantY, Loc.Get("ui.reaction.yourUnit"), true);
+            Arrow(panel, x + sideWidth + 12f, combatantY + 46f, arrowWidth - 8f);
+
+            const float moraleY = 226f, pip = 18f, pipGap = 4f;
+            Ui.Label(panel, Loc.Get("ui.morale"), x, moraleY, 120f, 20f);
+            int cost = _reaction is CardId pick ? _match.ReactionCost(pick) : 0;
+            float pipsX = x + (inner - Match.MaxMorale * (pip + pipGap) + pipGap) * 0.5f;
+            for (int i = 0; i < Match.MaxMorale; i++)
+            {
+                var img = Ui.Image(panel, "Pip", Ui.Art(i < defender.Morale ? "Pip_On" : "Pip_Off"), pipsX + i * (pip + pipGap),
+                    moraleY, pip, pip);
+                if (i >= defender.Morale - cost && i < defender.Morale) img.color = new Color(1f, 1f, 1f, 0.4f);
+            }
+            Ui.Text(panel, Loc.Format("ui.moraleValue", defender.Morale, Match.MaxMorale), Ui.BodyFont, 17f, Ui.InkText,
+                x, moraleY - 3f, inner, 24f, TextAlignmentOptions.TopRight);
+
+            const float promptY = 260f;
+            string promptText = Loc.Get("ui.reaction.prompt");
+            var prompt = Ui.Text(panel, promptText, Ui.ItalicFont, 17f, Ui.Ink, x, promptY, inner, 0f);
+            float promptHeight = prompt.GetPreferredValues(promptText, inner, 0f).y;
+            prompt.rectTransform.sizeDelta = new Vector2(inner, promptHeight);
+
+            float passY = height - 22f - ReactionButtonHeight, playY = passY - 10f - ReactionButtonHeight;
+            Ui.Button(panel, Loc.Get("ui.reaction.pass"), false, x, passY, inner, ReactionButtonHeight,
+                () => OnReaction(null), 21f);
+            if (_reaction is CardId selected)
+            {
+                var play = Ui.Button(panel, Loc.Format("ui.reaction.play", Loc.CardName(selected), _match.ReactionCost(selected)),
+                    true, x, playY, inner, ReactionButtonHeight, () => OnReaction(selected), 21f);
+                var label = play.GetComponentInChildren<TextMeshProUGUI>();
+                label.margin = new Vector4(14f, 0f, 14f, 0f);
+                label.enableAutoSizing = true;
+                label.fontSizeMin = 15f;
+                label.fontSizeMax = 21f;
+            }
+
+            float top = promptY + promptHeight + 14f, areaHeight = playY - 14f - top;
+            float listHeight = cards.Count * (OptionHeight + OptionGap) - OptionGap;
+            RectTransform area = panel;
+            float optionX = x, optionY = top, optionWidth = inner;
+            if (listHeight > areaHeight)
+            {
+                const float pad = 4f;
+                var scroll = Ui.Scroll(panel, x, top, inner, areaHeight);
+                area = scroll.content;
+                area.sizeDelta = new Vector2(0f, listHeight + pad * 2f);
+                optionX = optionY = pad;
+                optionWidth = inner - 18f - pad * 2f;
+            }
+            foreach (var id in cards)
+            {
+                ReactionOption(area, id, optionX, optionY, optionWidth, applicable.Contains(id), pc);
+                optionY += OptionHeight + OptionGap;
+            }
+        }
+
+        static void Combatant(RectTransform panel, Unit unit, float center, float y, string caption, bool target)
+        {
+            const float size = 58f, width = 190f;
             Ui.Image(panel, "Token", Ui.UnitArt(unit.Type, unit.Side), center - size * 0.5f, y, size, size);
-            Ui.Text(panel, Loc.UnitDot(unit), Ui.TitleFont, 22f, target ? Ui.Rubric : Ui.InkText, center - 160f, y + 100f,
-                320f, 28f, TextAlignmentOptions.Top);
-            Ui.Text(panel, caption, Ui.BodyFont, 17f, Ui.InkBody, center - 160f, y + 130f, 320f, 24f,
+            Ui.Text(panel, Loc.UnitDot(unit), Ui.TitleFont, 17f, target ? Ui.Rubric : Ui.InkText, center - width * 0.5f,
+                y + size + 4f, width, 22f, TextAlignmentOptions.Top).textWrappingMode = TextWrappingModes.NoWrap;
+            Ui.Text(panel, caption, Ui.BodyFont, 15f, Ui.InkBody, center - width * 0.5f, y + size + 27f, width, 20f,
                 TextAlignmentOptions.Top);
         }
 
-        string ReactionNote(CardId id, bool ok, PendingCapture pc)
+        void ReactionOption(RectTransform parent, CardId id, float x, float y, float w, bool ok, PendingCapture pc)
         {
-            int cost = _match.ReactionCost(id);
-            if (!ok)
+            bool chosen = ok && _reaction == id;
+            var rubric = Ui.Rubric;
+            if (chosen)
+                Ui.Sliced(parent, "Glow", Ui.Pill(Color.clear, new Color(rubric.r, rubric.g, rubric.b, 0.16f), 7, 3f),
+                    x - 3f, y - 3f, w + 6f, OptionHeight + 6f);
+            var frame = chosen ? Ui.Pill(new Color(rubric.r, rubric.g, rubric.b, 0.07f), rubric, 4, 2f)
+                : Ui.Pill(Color.clear, new Color(Ui.Ink.r, Ui.Ink.g, Ui.Ink.b, 0.25f), 4, 2f);
+            var box = Ui.Sliced(parent, "Option " + id, frame, x, y, w, OptionHeight, raycast: ok);
+
+            var card = Ui.Card(box.transform, CardCatalog.Get(id), OptionCard / Ui.CardWidth);
+            card.anchoredPosition = new Vector2(7f, -(OptionHeight - OptionCard * Ui.CardHeight / Ui.CardWidth) * 0.5f);
+            if (!ok) card.gameObject.AddComponent<CanvasGroup>().alpha = 0.45f;
+
+            const float textX = 7f + OptionCard + 14f, titleHeight = 25f, statusHeight = 21f;
+            float textWidth = w - textX - 10f;
+            string outcome = ReactionOutcome(id, ok, pc);
+            var body = Ui.Text(box.transform, outcome, Ui.BodyFont, 16.5f, Ui.InkText, textX, 0f, textWidth, 0f);
+            float bodyHeight = body.GetPreferredValues(outcome, textWidth, 0f).y;
+            float top = (OptionHeight - titleHeight - statusHeight - bodyHeight) * 0.5f;
+            body.rectTransform.anchoredPosition = new Vector2(textX, -(top + titleHeight + statusHeight));
+            body.rectTransform.sizeDelta = new Vector2(textWidth, bodyHeight);
+
+            var title = Ui.Text(box.transform, Loc.CardName(id), Ui.TitleFont, 21f, Ui.InkText, textX, top, textWidth, titleHeight);
+            title.textWrappingMode = TextWrappingModes.NoWrap;
+            title.enableAutoSizing = true;
+            title.fontSizeMin = 16f;
+            title.fontSizeMax = 21f;
+            var status = Ui.Text(box.transform, ReactionStatus(id, ok, pc), Ui.TitleFont, 14f, ok ? Ui.Rubric : Ui.InkSoft,
+                textX, top + titleHeight, textWidth, statusHeight);
+            status.characterSpacing = 10f;
+            status.textWrappingMode = TextWrappingModes.NoWrap;
+
+            if (!ok) return;
+            var button = box.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.None;
+            button.onClick.AddListener(() =>
             {
-                if (_match.ReactionApplies(id)) return Loc.Get("ui.reaction.noMorale");
-                if (id == CardId.SovereignsGuard && pc.Defender.Type == UnitType.Sovereign) return Loc.Get("ui.reaction.noGuard");
-                return Loc.Get("ui.reaction.no." + id);
-            }
+                _reaction = id;
+                RefreshOverlay();
+            });
+        }
+
+        string ReactionStatus(CardId id, bool ok, PendingCapture pc)
+        {
+            if (!ok) return Loc.Get(_match.ReactionApplies(id) ? "ui.reaction.noMorale" : "ui.reaction.notApplicable");
+            int cost = _match.ReactionCost(id);
             return id switch
             {
                 CardId.OrganizedRetreat => Loc.Format("ui.reaction.retreat", _match.RetreatSquare(pc.Defender), cost),
                 CardId.Countercharge => Loc.Format("ui.reaction.countercharge", _match.CounterchargeSquare(pc.Defender), cost),
                 CardId.SovereignsGuard or CardId.HeroicInterposition
-                    => Loc.Format("ui.reaction.guard", Loc.UnitDot(_match.GuardFor(pc.Defender)), cost),
+                    => Loc.Format("ui.reaction.guard", _match.GuardFor(pc.Defender).Pos, cost),
                 _ => Loc.Format("ui.reaction.block", cost),
             };
         }
 
+        string ReactionOutcome(CardId id, bool ok, PendingCapture pc)
+        {
+            if (!ok)
+            {
+                if (_match.ReactionApplies(id))
+                    return Loc.Format("ui.reaction.outcome.noMorale", _match.ReactionCost(id), _match.Get(pc.Defender.Side).Morale);
+                if (id == CardId.SovereignsGuard && pc.Defender.Type == UnitType.Sovereign) return Loc.Get("ui.reaction.noGuard");
+                return Loc.Get("ui.reaction.no." + id);
+            }
+            return id switch
+            {
+                CardId.OrganizedRetreat => pc.Advances ? Loc.Format("ui.reaction.outcome.retreat", pc.Target)
+                    : Loc.Format("ui.reaction.outcome.retreatStay", pc.From),
+                CardId.Countercharge => Loc.Format("ui.reaction.outcome.countercharge", pc.From),
+                CardId.SovereignsGuard or CardId.HeroicInterposition
+                    => Loc.Format("ui.reaction.outcome.guard", _match.GuardFor(pc.Defender).Pos),
+                CardId.CloseRanks => Loc.Get("ui.reaction.outcome.closeRanks"),
+                CardId.SmokeScreen => Loc.Format("ui.reaction.outcome.smoke", pc.Target),
+                _ => Loc.Format("ui.reaction.outcome.block", pc.From),
+            };
+        }
+
+        // The spotlight dims every square off the attack, so the preview of the chosen reaction reads at a glance.
+        void FocusBoard(PendingCapture pc)
+        {
+            var lit = new HashSet<Coord> { pc.From, pc.Target };
+            int dx = pc.Target.X - pc.From.X, dy = pc.Target.Y - pc.From.Y;
+            if (dx == 0 || dy == 0 || Mathf.Abs(dx) == Mathf.Abs(dy))
+            {
+                var step = new Coord(System.Math.Sign(dx), System.Math.Sign(dy));
+                for (var c = pc.From + step; c != pc.Target; c += step) lit.Add(c);
+            }
+
+            switch (_reaction)
+            {
+                case CardId.OrganizedRetreat:
+                case CardId.Countercharge:
+                {
+                    var back = (_reaction == CardId.OrganizedRetreat
+                        ? _match.RetreatSquare(pc.Defender) : _match.CounterchargeSquare(pc.Defender)).Value;
+                    lit.Add(back);
+                    var o = SquareOrigin(back);
+                    Ui.DashedBox(_focusLayer, o.x + 4f, -o.y + 4f, Square - 8f, Square - 8f, Ui.Ink, 1.6f, 5f, 5f);
+                    var c = SquareCenter(back);
+                    Ui.Image(_focusLayer, "Ghost", Ui.UnitArt(pc.Defender.Type, pc.Defender.Side), c.x - PieceSize * 0.5f,
+                        -c.y - PieceSize * 0.5f, PieceSize, PieceSize).color = new Color(1f, 1f, 1f, 0.45f);
+                    InkArrow(pc.Target, back, PieceSize * 0.5f, PieceSize * 0.25f, both: false);
+                    break;
+                }
+                case CardId.SovereignsGuard:
+                case CardId.HeroicInterposition:
+                {
+                    var guard = _match.GuardFor(pc.Defender).Pos;
+                    lit.Add(guard);
+                    var o = SquareOrigin(guard);
+                    Ui.DashedBox(_focusLayer, o.x + 4f, -o.y + 4f, Square - 8f, Square - 8f, Ui.Ink, 1.6f, 5f, 5f);
+                    InkArrow(guard, pc.Target, PieceSize * 0.42f, PieceSize * 0.42f, both: true);
+                    break;
+                }
+                case CardId _:
+                {
+                    var o = SquareOrigin(pc.Target);
+                    Ui.Image(_focusLayer, "Shield", Ui.Art("Badge_Shield"), o.x + 50f, -o.y + 14f, 30f, 30f);
+                    break;
+                }
+            }
+
+            for (int x = 0; x < Match.Size; x++)
+                for (int y = 0; y < Match.Size; y++)
+                    _spot[x, y].enabled = !lit.Contains(new Coord(x, y));
+            BoardTag(pc.From, pc.Target, Loc.Get("ui.reaction.tag.attacker"), Ui.Rubric);
+            BoardTag(pc.Target, pc.From, Loc.Get("ui.reaction.tag.target"), Ui.Ink);
+        }
+
+        void InkArrow(Coord from, Coord to, float startInset, float tipInset, bool both)
+        {
+            Vector2 a = SquareCenter(from), b = SquareCenter(to), dir = (b - a).normalized;
+            Vector2 start = a + dir * startInset, tip = b - dir * tipInset;
+            var ink = new Color(Ui.Ink.r, Ui.Ink.g, Ui.Ink.b, 0.9f);
+            Ui.Dashed(_focusLayer, tip, start, ink, TrailWidth, TrailDash, TrailGap);
+            ArrowHead(_focusLayer, tip, dir, ink);
+            if (both) ArrowHead(_focusLayer, start, -dir, ink);
+        }
+
+        // A tag rides above its square unless the other unit stands right there.
+        void BoardTag(Coord c, Coord other, string text, Color fill)
+        {
+            const float height = 18f;
+            var o = SquareOrigin(c);
+            var p = SquareOrigin(other);
+            bool below = Mathf.Approximately(p.x, o.x) && Mathf.Approximately(p.y, o.y + Square);
+            var tag = Ui.Sliced(_focusLayer, "Tag", Ui.Pill(fill, fill, 3, 0f), 0f, 0f, 0f, height);
+            var label = Ui.Text(tag.transform, text, Ui.TitleFont, 12f, Ui.Cream, 7f, 0f, 0f, height,
+                TextAlignmentOptions.MidlineLeft);
+            label.characterSpacing = 8f;
+            Fit(label);
+            float width = label.rectTransform.sizeDelta.x + 14f;
+            tag.rectTransform.sizeDelta = new Vector2(width, height);
+            tag.rectTransform.anchoredPosition =
+                new Vector2(o.x + (Square - width) * 0.5f, below ? o.y - Square + 2f : o.y + height - 2f);
+        }
+
         void BuildForesight()
         {
+            _foresightCards.Clear();
             var options = _match.ForesightOptions;
             var source = _match.ForesightCard;
             int n = options.Count;
@@ -1515,7 +1939,9 @@ namespace ArcaneGambit.Game
                 if (chosen) Ui.Sliced(area, "Glow", Ui.Glow, x - 4f, y - 4f, boxWidth + 8f, boxHeight + 8f);
                 var box = Ui.Sliced(area, "Pick", chosen ? Ui.Selection : Ui.Solid, x, y, boxWidth, boxHeight, raycast: true);
                 if (!chosen) box.color = Color.clear;
-                Ui.Card(box.transform, info, scale).anchoredPosition = new Vector2(12f, -12f);
+                var shown = Ui.Card(box.transform, info, scale);
+                shown.anchoredPosition = new Vector2(12f, -12f);
+                _foresightCards.Add(shown);
                 Ui.Text(box.transform, Ui.SmallCaps(Loc.KindName(info.Kind)) + " · " + Loc.Format("ui.cell.moraleCost", info.Cost),
                     Ui.BodyFont, 18f, Ui.InkText, 0f, boxHeight - 38f, boxWidth, 24f, TextAlignmentOptions.Top);
                 if (chosen)
@@ -1550,6 +1976,112 @@ namespace ArcaneGambit.Game
             };
             Row(panel, 707f, 0f, FitButton(panel, Loc.Format(action, Loc.CardName(options[_foresightPick])), true,
                 58f, 22f, 30f, OnForesight));
+        }
+
+        // The same sheet announces a condition as it is played and, from the conditions panel, describes one in effect.
+        void BuildCondition(CardId card, bool notice)
+        {
+            const float w = 1140f, padX = 56f, padY = 48f, cardW = 285f, cardH = 400f, gap = 18f;
+            const float columnX = padX + cardW + 52f, columnWidth = w - columnX - padX;
+            var log = _match.Log;
+            int index = notice ? _weatherNotices[0] : log.Count - 1;
+            if (!notice)
+                while (index > 0 && (log[index].Kind != LogKind.CardPlayed || log[index].Card != card)) index--;
+            var played = log[index];
+
+            // Built off-panel first: the panel's height follows the wrapped text.
+            var column = Ui.Rect(_overlayContent, "Column", 0f, 0f, columnWidth, 0f);
+            float y = 0f;
+            var eyebrow = Ui.Label(column, Loc.Get(notice ? "ui.weather.eyebrow" : "ui.weather.eyebrowActive"), 0f, y,
+                columnWidth, 24f);
+            eyebrow.fontSize = 18f;
+            eyebrow.characterSpacing = 20f;
+            eyebrow.color = Ui.Rubric;
+            y += 24f + gap;
+
+            TextMeshProUGUI Wrapped(string text, TMP_FontAsset font, float size, Color color, float x, float width)
+            {
+                var t = Ui.Text(column, text, font, size, color, x, y, width, 0f);
+                t.rectTransform.sizeDelta = new Vector2(width, t.GetPreferredValues(text, width, 0f).y);
+                return t;
+            }
+
+            y += Wrapped(Ui.Initial(Loc.Get("ui.weather.title." + card), 122), Ui.TitleFont, 54f, Ui.InkText, 0f, columnWidth)
+                .rectTransform.sizeDelta.y + gap;
+
+            string lead = Loc.Format("ui.weather.lead", Loc.Army(played.Side), Ui.Roman(played.Turn));
+            if (notice && index + 1 < log.Count && log[index + 1] is { Kind: LogKind.WeatherCleared, Flag: true } displaced)
+                lead += " " + Loc.Format("log.weatherDisplaced", Loc.CardName(displaced.Card));
+            if (!notice && card == CardId.LightningStorm)
+                foreach (var m in _match.Markers)
+                    if (m.Kind == MarkerKind.Lightning) lead += " " + Loc.Format("ui.conditions.lightning", m.Pos);
+            y += Wrapped(lead, Ui.ItalicFont, 22f, Ui.Ink, 0f, columnWidth).rectTransform.sizeDelta.y + gap;
+
+            const float boxPadX = 22f, boxPadY = 18f;
+            var box = Ui.Sliced(column, "Effect", Ui.Framed, 0f, y, columnWidth, 0f);
+            float effectY = y;
+            y += boxPadY;
+            float effectHeight = Wrapped(Loc.CardText(card), Ui.BodyFont, 25f, Ui.InkText, boxPadX, columnWidth - boxPadX * 2f)
+                .rectTransform.sizeDelta.y;
+            box.rectTransform.sizeDelta = new Vector2(columnWidth, effectHeight + boxPadY * 2f);
+            y = effectY + effectHeight + boxPadY * 2f + gap;
+
+            const float chipHeight = 32f, chipGap = 8f;
+            float chipX = 0f;
+            foreach (var label in new[]
+                     {
+                         Loc.Get("ui.weather.both"), Loc.Get("ui.weather.lasting"),
+                         Loc.Format("ui.weather.listed", Loc.Get("ui.conditions.header")),
+                     })
+            {
+                var chip = Chip(column, label, chipX, y).rectTransform;
+                if (chipX > 0f && chipX + chip.sizeDelta.x > columnWidth)
+                {
+                    chipX = 0f;
+                    y += chipHeight + chipGap;
+                    chip.anchoredPosition = new Vector2(0f, -y);
+                }
+                chipX += chip.sizeDelta.x + chipGap;
+            }
+            y += chipHeight + gap + 8f;
+
+            const float buttonHeight = 58f;
+            var button = (RectTransform)FitButton(column, Loc.Get(notice ? "ui.weather.button" : "ui.weather.close"), true,
+                buttonHeight, 22f, 40f, notice ? DismissWeather : CloseCondition).transform;
+            button.anchoredPosition = new Vector2(0f, -y);
+            float noteX = button.sizeDelta.x + 18f;
+            Ui.Text(column, Loc.Format("ui.weather.remove", Loc.CardName(CardId.DawnPrayer)), Ui.ItalicFont, 18f,
+                Ui.InkBody, noteX, y, columnWidth - noteX, buttonHeight, TextAlignmentOptions.MidlineLeft);
+            y += buttonHeight;
+
+            float h = padY * 2f + Mathf.Max(cardH, y);
+            var panel = OverlayPanel(w, h);
+            Ui.Card(panel, CardCatalog.Get(card), cardW / Ui.CardWidth).anchoredPosition = new Vector2(padX, -(h - cardH) * 0.5f);
+            column.SetParent(panel, false);
+            column.anchoredPosition = new Vector2(columnX, -(h - y) * 0.5f);
+        }
+
+        void OpenCondition(CardId card)
+        {
+            _conditionView = card;
+            RefreshOverlay();
+        }
+
+        void CloseCondition()
+        {
+            _conditionView = null;
+            RefreshOverlay();
+        }
+
+        void DismissWeather()
+        {
+            if (_weatherNotices.Count == 0) return;
+            var card = _match.Log[_weatherNotices[0]].Card;
+            _matchFx.OnWeatherAcknowledged(card);
+            OnWeatherBoardFx(card);
+            _weatherNotices.RemoveAt(0);
+            Refresh();
+            ScheduleAi();
         }
 
         void BuildDiscard()
@@ -1732,7 +2264,7 @@ namespace ArcaneGambit.Game
             const float token = 110f;
             Ui.Image(panel, "Sovereign", Ui.UnitArt(UnitType.Sovereign, loser), (w - token) * 0.5f, 90f, token, token);
             Cross(panel, (w - token) * 0.5f, 90f, token, Ui.Rubric, 5f);
-            Ui.Text(panel, Loc.Get(won ? "ui.gameOver.victory" : "ui.gameOver.defeat"), Ui.FrakturFont, 120f,
+            _gameOverTitle = Ui.Text(panel, Loc.Get(won ? "ui.gameOver.victory" : "ui.gameOver.defeat"), Ui.FrakturFont, 120f,
                 won ? Ui.Rubric : Ui.Ink, 0f, 208f, w, 150f, TextAlignmentOptions.Top);
             if (fall != null)
                 Ui.Text(panel, won
@@ -1767,12 +2299,12 @@ namespace ArcaneGambit.Game
                     _reviewing = true;
                     Refresh();
                 }),
-                Disabled(FitButton(panel, Loc.Get("ui.gameOver.menu"), false, 58f, 22f, 30f, () => { })));
+                FitButton(panel, Loc.Get("ui.gameOver.menu"), false, 58f, 22f, 30f, LoadMenu));
         }
 
         void BuildPause()
         {
-            const float w = 580f, h = 564f, buttonX = 52f, buttonY = 214f, step = 68f;
+            const float w = 580f, h = 632f, buttonX = 52f, buttonY = 214f, step = 68f;
             var panel = OverlayPanel(w, h);
             Eyebrow(panel, Loc.Format("ui.pause.eyebrow", Ui.Roman(_match.Turn)), 44f);
             Title(panel, Loc.Get("ui.pause.title"), 84f, 52f);
@@ -1784,12 +2316,18 @@ namespace ArcaneGambit.Game
             }, 22f);
             Disabled(Ui.Button(panel, Loc.Get("ui.pause.rules"), false, buttonX, buttonY + step, bw, 56f, () => { }, 22f));
             Disabled(Ui.Button(panel, Loc.Get("ui.pause.settings"), false, buttonX, buttonY + step * 2f, bw, 56f, () => { }, 22f));
-            Ui.Danger(Ui.Button(panel, Loc.Get("ui.pause.abandon"), false, buttonX, buttonY + step * 3f, bw, 56f, () =>
+            string reduce = FxSettings.ReduceFlashesAndShakes ? "ui.pause.reduceMotion.on" : "ui.pause.reduceMotion.off";
+            Ui.Button(panel, Loc.Get(reduce), false, buttonX, buttonY + step * 3f, bw, 56f, () =>
+            {
+                FxSettings.ReduceFlashesAndShakes = !FxSettings.ReduceFlashesAndShakes;
+                RefreshOverlay();
+            }, 20f);
+            Ui.Danger(Ui.Button(panel, Loc.Get("ui.pause.abandon"), false, buttonX, buttonY + step * 4f, bw, 56f, () =>
             {
                 _confirmAbandon = true;
                 RefreshOverlay();
             }, 22f));
-            Ui.Text(panel, Loc.Get("ui.pause.hint"), Ui.ItalicFont, 18f, Ui.InkBody, 0f, 496f, w, 26f, TextAlignmentOptions.Top);
+            Ui.Text(panel, Loc.Get("ui.pause.hint"), Ui.ItalicFont, 18f, Ui.InkBody, 0f, 564f, w, 26f, TextAlignmentOptions.Top);
         }
 
         void BuildConfirm()
@@ -1805,8 +2343,10 @@ namespace ArcaneGambit.Game
                     _confirmAbandon = false;
                     RefreshOverlay();
                 }),
-                FitButton(panel, Loc.Get("ui.confirm.abandon"), true, 58f, 22f, 30f, NewMatch));
+                FitButton(panel, Loc.Get("ui.confirm.abandon"), true, 58f, 22f, 30f, LoadMenu));
         }
+
+        static void LoadMenu() => SceneManager.LoadScene(MainMenu.SceneName);
 
         void ShowTurnBanner(LogEntry e)
         {
@@ -1831,6 +2371,7 @@ namespace ArcaneGambit.Game
             foreach (float side in new[] { -1f, 1f })
                 Ui.Image(toast, "Sovereign", Ui.UnitArt(UnitType.Sovereign, e.Side),
                     ToastWidth * 0.5f + side * (half + token * 0.5f) - token * 0.5f, (height - token) * 0.5f, token, token);
+            PlayTurnBannerFx(toast, title);
         }
 
         void ShowResult(int index)
@@ -2082,6 +2623,7 @@ namespace ArcaneGambit.Game
                 {
                     var origin = SquareOrigin(new Coord(x, y));
                     _under[x, y].rectTransform.anchoredPosition = origin;
+                    _spot[x, y].rectTransform.anchoredPosition = origin;
                     ((RectTransform)_hint[x, y].transform.parent).anchoredPosition = origin;
                 }
             for (int i = 0; i < Match.Size; i++)
@@ -2102,14 +2644,17 @@ namespace ArcaneGambit.Game
             var rt = Ui.Rect(_piecesLayer, $"{unit.Side} {unit.Type} #{unit.Id}", 0, 0, PieceSize, PieceSize);
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = SquareCenter(unit.Pos);
+            // Feel animates the Holder at scale 1, leaving the root to the board's own move and pop routines.
+            var holder = Ui.Centered(Ui.Rect(rt, "Holder", 0, 0, PieceSize, PieceSize));
             var piece = new Piece
             {
                 Id = unit.Id,
                 Rt = rt,
+                Holder = holder,
                 Group = rt.gameObject.AddComponent<CanvasGroup>(),
-                Body = Ui.Image(rt, "Token", Ui.UnitArt(unit.Type, unit.Side), 0, 0, PieceSize, PieceSize),
-                Shield = Ui.Image(rt, "Shield", Ui.Art("Badge_Shield"), -4, 44, 28, 28),
-                Hammer = Ui.Image(rt, "Hammer", Ui.Art("Badge_Hammer"), 46, 44, 28, 28),
+                Body = Ui.Image(holder, "Token", Ui.UnitArt(unit.Type, unit.Side), 0, 0, PieceSize, PieceSize),
+                Shield = Ui.Image(holder, "Shield", Ui.Art("Badge_Shield"), -4, 44, 28, 28),
+                Hammer = Ui.Image(holder, "Hammer", Ui.Art("Badge_Hammer"), 46, 44, 28, 28),
             };
             piece.Group.blocksRaycasts = false;
             _pieces[unit.Id] = piece;
@@ -2118,26 +2663,32 @@ namespace ArcaneGambit.Game
 
         void BuildUi()
         {
+            // Everything under this object is generated here; a saved scene may still hold an old copy of it.
+            for (int i = transform.childCount - 1; i >= 0; i--) Destroy(transform.GetChild(i).gameObject);
             if (FindAnyObjectByType<EventSystem>() == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
-            if (Camera.main != null) Camera.main.backgroundColor = Ui.Table;
+            var camera = Camera.main;
+            if (camera != null) camera.backgroundColor = Ui.Table;
+            _fx = FxRoot.Create(transform, camera);
+            if (_fx != null) _fx.UseFont(Ui.ItalicFont);
 
-            var canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            canvasGo.transform.SetParent(transform, false);
-            canvasGo.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-            _scaler = canvasGo.GetComponent<CanvasScaler>();
-            _scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            _scaler.referenceResolution = new Vector2(StageWidth, StageHeight);
-            _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            var root = (RectTransform)canvasGo.transform;
+            // The board sits on its own canvas, under the world camera, so particles and post-processing reach it
+            // while the HUD canvas stays crisp above. Both canvases share one scaler setup, so their stages line up.
+            var world = CreateCanvas("World Canvas", _fx != null ? _fx.WorldCamera : camera, FxLayers.Board,
+                FxLayers.World, out _worldScaler);
+            Ui.Stretch(Ui.Image(world, "Background", Ui.Art("Background"), 0, 0, 0, 0).rectTransform);
+            _worldStage = Ui.Stretch(Ui.Rect(world, "Stage", 0, 0, 0, 0));
+            _worldRaycaster = world.GetComponent<GraphicRaycaster>();
 
-            Ui.Stretch(Ui.Image(root, "Background", Ui.Art("Background"), 0, 0, 0, 0).rectTransform);
-
+            var root = CreateCanvas("Canvas", _fx != null ? _fx.HudCamera : camera, FxLayers.Hud, FxLayers.Ui,
+                out _scaler);
             _stage = Ui.Stretch(Ui.Rect(root, "Stage", 0, 0, 0, 0));
+            _hudRaycaster = root.GetComponent<GraphicRaycaster>();
 
             BuildHeader();
             BuildConditions();
             BuildBoard();
+            if (FxDirector != null) FxDirector.LockChanged += OnFxLock;
             _hand = Ui.Rect(_stage, "Hand", CenterX, HandY, CenterWidth, StageHeight - HandY);
             Ui.Anchor(_hand, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), Stage);
             _handGroup = _hand.gameObject.AddComponent<CanvasGroup>();
@@ -2145,16 +2696,39 @@ namespace ArcaneGambit.Game
 
             _toasts = Ui.Rect(root, "Toasts", ToastX, ToastY, ToastWidth, 0f);
             Ui.Anchor(_toasts, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Stage);
+            BuildCardFxLayer(root);
 
             _overlay = Ui.Stretch(Ui.Rect(root, "Overlay", 0, 0, 0, 0));
-            _overlay.gameObject.AddComponent<Image>().color = ScrimColor;
+            var modals = _overlay.gameObject.AddComponent<Canvas>();
+            modals.overrideSorting = true;
+            modals.sortingLayerName = FxLayers.Modals;
+            _overlay.gameObject.AddComponent<GraphicRaycaster>();
+            _overlayShade = _overlay.gameObject.AddComponent<Image>();
+            _overlayShade.color = ScrimColor;
             var backdrop = Ui.Stretch(Ui.Image(_overlay, "Backdrop", Ui.Solid, 0, 0, 0, 0, raycast: true).rectTransform);
             backdrop.GetComponent<Image>().color = Color.clear;
             backdrop.gameObject.AddComponent<Button>().onClick.AddListener(CloseDiscard);
             _backdrop = backdrop.gameObject;
+            _confront = Ui.Stretch(Ui.Rect(_overlay, "Confront", 0, 0, 0, 0));
             _overlayContent = Ui.Rect(_overlay, "Content", 0, 0, StageWidth, StageHeight);
             _overlayContent.anchorMin = _overlayContent.anchorMax = _overlayContent.pivot = new Vector2(0.5f, 0.5f);
             _overlayContent.anchoredPosition = Vector2.zero;
+        }
+
+        RectTransform CreateCanvas(string name, Camera camera, string sortingLayer, int layer, out CanvasScaler scaler)
+        {
+            var go = new GameObject(name, typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster)) { layer = layer };
+            go.transform.SetParent(transform, false);
+            var canvas = go.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = camera;
+            canvas.planeDistance = CanvasDistance;
+            canvas.sortingLayerName = sortingLayer;
+            scaler = go.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(StageWidth, StageHeight);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            return (RectTransform)go.transform;
         }
 
         void BuildHeader()
@@ -2269,9 +2843,10 @@ namespace ArcaneGambit.Game
         void RefreshConditions()
         {
             for (int i = _conditions.childCount - 1; i >= 0; i--) Destroy(_conditions.GetChild(i).gameObject);
-            var weather = _match.Weather;
-            _conditionsState.text = Loc.Get(weather.HasValue ? "ui.conditions.active" : "ui.conditions.none");
-            if (!(weather is CardId active))
+            var active = _match.Conditions;
+            _conditionsState.text = active.Count == 0 ? Loc.Get("ui.conditions.none")
+                : Loc.Format("ui.conditions.active", active.Count, Match.MaxConditions);
+            if (active.Count == 0)
             {
                 var empty = Ui.Text(_conditions, Loc.Get("ui.conditions.empty"), Ui.ItalicFont, 19f, Ui.InkBody, 40, 0,
                     LeftWidth - 80f, 0f, TextAlignmentOptions.Center);
@@ -2280,14 +2855,42 @@ namespace ArcaneGambit.Game
                 return;
             }
 
-            const float scale = 0.6f, x = 20f, textX = x + Ui.CardWidth * scale + 16f;
-            Ui.Card(_conditions, CardCatalog.Get(active), scale).anchoredPosition = new Vector2(x, 0f);
-            float textWidth = LeftWidth - textX - 20f;
-            Ui.Text(_conditions, Ui.Initial(Loc.CardName(active), 120), Ui.TitleFont, 22f, Ui.InkText, textX, 0f, textWidth, 56f);
-            string detail = Loc.Get("ui.conditions.lasting");
-            foreach (var m in _match.Markers)
-                if (m.Kind == MarkerKind.Lightning) detail += "\n\n" + Loc.Format("ui.conditions.lightning", m.Pos);
-            Ui.Text(_conditions, detail, Ui.BodyFont, 16f, Ui.InkBody, textX, 62f, textWidth, 150f);
+            const float x = 20f, rowHeight = 74f, rowGap = 8f, pad = 7f, artW = 84f, artH = 60f;
+            const float textX = pad + artW + 12f, rowWidth = LeftWidth - x * 2f, textWidth = rowWidth - textX - 10f;
+            for (int i = 0; i < active.Count; i++)
+            {
+                var card = active[i];
+                var row = Ui.Image(_conditions, "Condition " + card, Ui.Tile, x, i * (rowHeight + rowGap), rowWidth, rowHeight);
+                row.type = Image.Type.Sliced;
+                Ui.MakeButton(row, () => OpenCondition(card));
+                ConditionArt(row.transform, card, pad, pad, artW, artH);
+                Ui.Text(row.transform, Loc.CardName(card), Ui.TitleFont, 20f, Ui.InkText, textX, 7f, textWidth, 24f)
+                    .textWrappingMode = TextWrappingModes.NoWrap;
+                string detail = Loc.Get("ui.conditions." + card);
+                if (card == CardId.LightningStorm)
+                    foreach (var m in _match.Markers)
+                        if (m.Kind == MarkerKind.Lightning) detail = Loc.Format("ui.conditions.lightning", m.Pos);
+                Ui.Text(row.transform, detail, Ui.BodyFont, 16f, Ui.InkText, textX, 31f, textWidth, 40f);
+            }
+            if (active.Count < Match.MaxConditions)
+                Ui.Text(_conditions, Loc.Get("ui.conditions.stacking"), Ui.ItalicFont, 16f, Ui.InkBody, x,
+                    active.Count * (rowHeight + rowGap) + 4f, rowWidth, 44f, TextAlignmentOptions.Top);
+        }
+
+        // The arched window of the condition frame: a rounded mask cropped flat at the bottom by the outer rect.
+        static void ConditionArt(Transform parent, CardId card, float x, float y, float w, float h)
+        {
+            const int radius = 22;
+            var clip = Ui.Rect(parent, "Art", x, y, w, h);
+            clip.gameObject.AddComponent<RectMask2D>();
+            var window = Ui.Image(clip, "Window", Ui.Pill(Ui.Parchment, Ui.Parchment, radius, 0f), 0f, 0f, w, h + radius);
+            window.type = Image.Type.Sliced;
+            window.gameObject.AddComponent<Mask>();
+            var art = Ui.Art("Card_" + card);
+            float artWidth = art != null ? (h - 5f) * art.rect.width / art.rect.height : w;
+            Ui.Image(window.transform, "Picture", art, (w - artWidth) * 0.5f, 5f, artWidth, h - 5f);
+            Ui.Image(clip, "Rim", Ui.Pill(Color.clear, Ui.Ink, radius), 0f, 0f, w, h + radius).type = Image.Type.Sliced;
+            Ui.Line(clip, 0f, h - 1f, w, 1f);
         }
 
         void FitBoard(Vector2 canvas)
@@ -2296,16 +2899,23 @@ namespace ArcaneGambit.Game
             float height = canvas.y - ColumnTop - BoardClearance;
             float scale = Mathf.Min(width / BoardSize, height / (BoardSize - BoardMargin));
             float centerOffset = CenterX + CenterWidth * 0.5f - StageWidth * 0.5f;
-            _board.localScale = new Vector3(scale, scale, 1f);
-            _board.anchoredPosition =
+            _boardRig.localScale = new Vector3(scale, scale, 1f);
+            _boardRig.anchoredPosition =
                 new Vector2(centerOffset - BoardSize * scale * 0.5f, -(ColumnTop - BoardMargin * scale));
         }
 
+        // The rig takes the fit-to-screen scale, so the board inside stays at scale 1 for Feel to shake and pulse.
         void BuildBoard()
         {
-            var board = _board = Ui.Image(_stage, "Board", Ui.Art("Board"), 0, 0, BoardSize, BoardSize).rectTransform;
-            board.anchorMin = board.anchorMax = new Vector2(0.5f, 1f);
+            _boardRig = Ui.Rect(_worldStage, "Board Rig", 0, 0, BoardSize, BoardSize);
+            _boardRig.anchorMin = _boardRig.anchorMax = new Vector2(0.5f, 1f);
+            var board = Ui.Image(_boardRig, "Board", Ui.Art("Board"), 0, 0, BoardSize, BoardSize).rectTransform;
             FitBoard(Stage);
+            _matchFx = new MatchFx(FxDirector, this);
+            _board = board;
+            _markRing = Resources.Load<Sprite>("MarkRing");
+            // Known before the events are read: projectiles declared in this sync count from its very first event.
+            _matchFx.PresentedElsewhere = square => _claims.Contains(square) || _projectileTargets.Contains(square);
 
             for (int i = 0; i < Match.Size; i++)
             {
@@ -2320,21 +2930,31 @@ namespace ArcaneGambit.Game
             _markerLayer = Ui.Rect(board, "Markers", 0, 0, BoardSize, BoardSize);
             _trailLayer = Ui.Rect(board, "Trails", 0, 0, BoardSize, BoardSize);
             _previewLayer = Ui.Rect(board, "Preview", 0, 0, BoardSize, BoardSize);
+            // Board FX get their own layers: Refresh and the confront clear the others.
+            _boardFxUnder = Ui.Rect(board, "FX Under", 0, 0, BoardSize, BoardSize);
             _piecesLayer = Ui.Rect(board, "Pieces", 0, 0, BoardSize, BoardSize);
+            _boardFxOver = Ui.Rect(board, "FX Over", 0, 0, BoardSize, BoardSize);
+            var spotlight = Ui.Rect(board, "Spotlight", 0, 0, BoardSize, BoardSize);
+            _spotGroup = spotlight.gameObject.AddComponent<CanvasGroup>();
+            _focusLayer = Ui.Rect(board, "Focus", 0, 0, BoardSize, BoardSize);
             var over = Ui.Rect(board, "Squares", 0, 0, BoardSize, BoardSize);
+            var dim = new Color(ScrimColor.r, ScrimColor.g, ScrimColor.b, SpotAlpha);
 
             for (int x = 0; x < Match.Size; x++)
                 for (int y = 0; y < Match.Size; y++)
                 {
                     var c = new Coord(x, y);
                     _under[x, y] = Ui.Image(under, "Under " + c, null, 0, 0, Square, Square);
+                    _spot[x, y] = Ui.Image(spotlight, "Spot " + c, Ui.Solid, 0, 0, Square, Square);
+                    _spot[x, y].color = dim;
+                    _spot[x, y].enabled = false;
 
                     var hit = Ui.Image(over, c.ToString(), Ui.Solid, 0, 0, Square, Square, raycast: true);
                     hit.color = Color.clear;
                     var button = hit.gameObject.AddComponent<Button>();
                     button.transition = Selectable.Transition.None;
                     button.onClick.AddListener(() => OnSquareClicked(c));
-                    OnHover(hit.gameObject, () => HoverSquare(c, true), () => HoverSquare(c, false));
+                    Ui.OnHover(hit.gameObject, () => HoverSquare(c, true), () => HoverSquare(c, false));
                     _hint[x, y] = Ui.Image(hit.transform, "Hint", null, 0, 0, Square, Square);
                 }
         }
@@ -2378,7 +2998,8 @@ namespace ArcaneGambit.Game
             var deck = Ui.Panel(column, "Deck Panel", 0f, deckY, w, DeckPanelHeight).rectTransform;
             const float backWidth = 58f, backHeight = 81f;
             for (int i = 2; i >= 0; i--)
-                Ui.Image(deck, "Back", Ui.Art("CardBack"), 18f + i * 4f, 15f + i * 4f, backWidth, backHeight);
+                _deckPile = Ui.Image(deck, "Back", Ui.Art("CardBack"), 18f + i * 4f, 15f + i * 4f, backWidth, backHeight)
+                    .rectTransform;
             const float deckTextX = 96f, discardX = 227f, discardTextX = 313f;
             Ui.Label(deck, Loc.Get("ui.deck"), deckTextX, 18f, 110f).textWrappingMode = TextWrappingModes.NoWrap;
             _deck = Ui.Text(deck, "", Ui.TitleFont, 24f, Ui.InkText, deckTextX, 40f, 110f, 30f);
@@ -2395,7 +3016,7 @@ namespace ArcaneGambit.Game
             var discardButton = discardHit.gameObject.AddComponent<Button>();
             discardButton.transition = Selectable.Transition.None;
             discardButton.onClick.AddListener(OnDiscardClicked);
-            OnHover(discardHit.gameObject, () => _discardPile.anchoredPosition = new Vector2(discardX, -9f),
+            Ui.OnHover(discardHit.gameObject, () => _discardPile.anchoredPosition = new Vector2(discardX, -9f),
                 () => _discardPile.anchoredPosition = new Vector2(discardX, -13f));
 
             float historyY = deckY + DeckPanelHeight + Gap;

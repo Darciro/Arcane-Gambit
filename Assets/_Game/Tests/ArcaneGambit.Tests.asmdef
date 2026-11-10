@@ -3,6 +3,7 @@
     "rootNamespace": "ArcaneGambit.Tests",
     "references": [
         "ArcaneGambit.Rules",
+        "ArcaneGambit.FX",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
