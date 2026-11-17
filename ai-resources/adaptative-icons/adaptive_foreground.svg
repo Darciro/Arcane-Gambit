@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 432 432">
+<defs>
+<filter id="ink" x="-8%" y="-8%" width="116%" height="116%">
+<feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="n"></feTurbulence>
+<feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+</filter>
+<pattern id="hatchI" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(40)"><line x1="0" y1="0" x2="0" y2="7" stroke="#3b2a1a" stroke-width="2"></line></pattern>
+</defs>
+<!-- Emblema da logomarca sem o selo: a máscara do Android faz o papel do selo.
+     Cabe no círculo seguro de 66 dp (264 px de diâmetro em 432). -->
+<g filter="url(#ink)" transform="translate(75.6 79.9) scale(1.08)" stroke-linecap="round" stroke-linejoin="round">
+<path d="M58 206 L196 52 M202 206 L64 52" fill="none" stroke="#3b2a1a" stroke-width="4.6"></path>
+<ellipse cx="199" cy="48" rx="11" ry="4" transform="rotate(-48 199 48)" fill="#f6eedb" stroke="#3b2a1a" stroke-width="3.2"></ellipse>
+<ellipse cx="61" cy="48" rx="11" ry="4" transform="rotate(48 61 48)" fill="#f6eedb" stroke="#3b2a1a" stroke-width="3.2"></ellipse>
+<path d="M182 66 l14 4 l-6 10" fill="none" stroke="#8e2f21" stroke-width="4.6"></path>
+<g transform="rotate(-22 130 196)"><rect x="96" y="78" width="68" height="100" rx="4" fill="#f6eedb" stroke="#3b2a1a" stroke-width="4"></rect><rect x="102" y="84" width="56" height="88" fill="none" stroke="#3b2a1a" stroke-width="2.4"></rect><path d="M130 84 H158 V172 H130 Z" fill="url(#hatchI)"></path></g>
+<g transform="rotate(22 130 196)"><rect x="96" y="78" width="68" height="100" rx="4" fill="#f6eedb" stroke="#3b2a1a" stroke-width="4"></rect><rect x="102" y="84" width="56" height="88" fill="none" stroke="#3b2a1a" stroke-width="2.4"></rect><path d="M130 84 H158 V172 H130 Z" fill="url(#hatchI)"></path></g>
+<rect x="96" y="72" width="68" height="100" rx="4" fill="#f6eedb" stroke="#3b2a1a" stroke-width="4"></rect>
+<rect x="102" y="78" width="56" height="88" fill="none" stroke="#3b2a1a" stroke-width="2.4"></rect>
+<circle cx="130" cy="96" r="9" fill="#8e2f21"></circle>
+<path d="M90 196 L84 146 L108 166 L130 124 L152 166 L176 146 L170 196 Z" fill="#f6eedb" stroke="#3b2a1a" stroke-width="4"></path>
+<path d="M152 166 L176 146 L170 196 H150 Z" fill="url(#hatchI)"></path>
+<path d="M88 196 H172 V212 H88 Z" fill="#f6eedb" stroke="#3b2a1a" stroke-width="4"></path>
+<path d="M150 196 H172 V212 H150 Z" fill="url(#hatchI)"></path>
+<circle cx="84" cy="144" r="4.5" fill="#f6eedb" stroke="#3b2a1a" stroke-width="3"></circle>
+<circle cx="176" cy="144" r="4.5" fill="#f6eedb" stroke="#3b2a1a" stroke-width="3"></circle>
+<circle cx="130" cy="121" r="5" fill="#f6eedb" stroke="#3b2a1a" stroke-width="3"></circle>
+<circle cx="108" cy="204" r="3.6" fill="#8e2f21"></circle>
+<circle cx="130" cy="204" r="4.4" fill="#8e2f21"></circle>
+<circle cx="152" cy="204" r="3.6" fill="#8e2f21"></circle>
+</g>
+</svg>

@@ -5,22 +5,94 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace ArcaneGambit.Game
 {
-    public sealed class MainMenu : MonoBehaviour
+    public sealed partial class MainMenu : MonoBehaviour
     {
         public const string SceneName = "MainMenu";
 
-        const float StageWidth = 1920f;
-        const float StageHeight = 1080f;
-        static readonly Vector2 Stage = new Vector2(StageWidth, StageHeight);
-        const float BrandX = 120f, BrandY = 90f, BrandWidth = 880f, LogoSize = 330f, BrandGap = 18f;
-        const float PanelX = 1140f, PanelY = 220f, PanelWidth = 560f, PanelTop = 44f, PanelPadding = 48f;
-        const float ButtonHeight = 70f, ButtonGap = 16f, ButtonFont = 30f, DividerHeight = 16f;
-        const float HoverTime = 0.15f, ShadowAlpha = 0.8f;
+        const float DividerHeight = 16f, HoverTime = 0.15f, ShadowAlpha = 0.8f;
+
+        // The layout of the current screen profile, set by ApplyProfile before the menu is built.
+        static UiSize s_size;
+        static float StageWidth, StageHeight;
+        static Vector2 Stage;
+        static float BrandX, BrandY, BrandWidth, LogoSize, BrandGap, BrandFont, TaglineFont, OrnamentWidth;
+        static float PanelX, PanelY, PanelWidth, PanelTop, PanelPadding, HeaderFont, HeaderMargin;
+        static float ButtonHeight, ButtonGap, ButtonFont, SoonFont, VersionX, VersionBottom, VersionFont;
+        static float HeaderHeight, s_side;
+
+        static void ApplyProfile()
+        {
+            s_size = UiProfile.Size;
+            Stage = UiProfile.Reference(s_size);
+            StageWidth = Stage.x;
+            StageHeight = Stage.y;
+            HeaderHeight = 24f;
+            if (UiProfile.Mobile)
+            {
+                ApplyMobileProfile();
+                return;
+            }
+            bool small = s_size == UiSize.Small, large = s_size == UiSize.Large;
+
+            BrandX = small ? 64f : large ? 160f : 120f;
+            BrandY = small ? 72f : large ? 126f : 90f;
+            BrandWidth = small ? 700f : 880f;
+            LogoSize = small ? 230f : 330f;
+            BrandGap = small ? 12f : 18f;
+            BrandFont = small ? 84f : 112f;
+            TaglineFont = small ? 23f : 30f;
+            OrnamentWidth = small ? 260f : 320f;
+
+            PanelX = small ? 840f : large ? 1236f : 1140f;
+            PanelY = small ? 136f : large ? 256f : 220f;
+            PanelWidth = small ? 470f : large ? 580f : 560f;
+            PanelTop = small ? 32f : 44f;
+            PanelPadding = small ? 36f : 48f;
+            HeaderFont = small ? 15f : 18f;
+            HeaderMargin = small ? 6f : 8f;
+            ButtonHeight = small ? 56f : 70f;
+            ButtonGap = small ? 12f : 16f;
+            ButtonFont = small ? 25f : 30f;
+            SoonFont = small ? 15f : 17f;
+            VersionX = small ? 36f : large ? 56f : 48f;
+            VersionBottom = small ? 24f : large ? 40f : 32f;
+            VersionFont = small ? 15f : 17f;
+        }
+
+        // The "mobile-horizontal" board: 844 x 390, the brand on the left half and the menu on the right.
+        static void ApplyMobileProfile()
+        {
+            s_side = UiProfile.SideInset;
+            BrandX = 47f;
+            BrandY = 62f;
+            BrandWidth = 390f;
+            LogoSize = 92f;
+            BrandGap = 8f;
+            BrandFont = 44f;
+            TaglineFont = 15.5f;
+            OrnamentWidth = 180f;
+
+            PanelX = 472f;
+            PanelY = 40f;
+            PanelWidth = 325f;
+            PanelTop = 18f;
+            PanelPadding = 20f;
+            HeaderFont = 12.5f;
+            HeaderHeight = 16f;
+            HeaderMargin = 2f;
+            ButtonHeight = 50f;
+            ButtonGap = 8f;
+            ButtonFont = 21f;
+            SoonFont = 13.5f;
+            VersionX = s_side;
+            VersionBottom = 20f;
+            VersionFont = 12.5f;
+        }
+
         static readonly Color ScrimColor = new Color(0.125f, 0.082f, 0.039f, 0.62f);
 
         sealed class MenuButton
@@ -35,20 +107,26 @@ namespace ArcaneGambit.Game
 
         readonly List<MenuButton> _buttons = new List<MenuButton>();
         int _focus = -1;
-        CanvasScaler _scaler;
         RectTransform _root, _credits;
+        OptionsModal _options;
 
         void Start()
         {
             Time.timeScale = 1f;
             Ui.SetCursor(CursorKind.Default);
+            // Every scene change goes through the sheet, so a menu reached without it is the game opening.
+            bool opening = !SceneTransition.Busy;
+            if (opening) GameAudio.PlayMusic(Playlist.Menu, IntroMusicFade);
+            else GameAudio.PlayMusic(Playlist.Menu);
             BuildUi();
+            if (opening) BeginIntro();
+            else _intro.Clear();
         }
 
         void Update()
         {
-            float aspect = (float)Screen.width / Mathf.Max(1, Screen.height);
-            _scaler.matchWidthOrHeight = aspect >= StageWidth / StageHeight ? 1f : 0f;
+            if (UiProfile.Size != s_size || (UiProfile.Mobile && !Mathf.Approximately(UiProfile.SideInset, s_side)))
+                ChangeProfile();
 
             for (int i = 0; i < _buttons.Count; i++)
             {
@@ -59,17 +137,30 @@ namespace ArcaneGambit.Game
                 Pose(b);
             }
 
+            bool intro = UpdateIntro();
+            UpdateMultiplayer();
+
             // A clicked button keeps UI focus, and the UI module would click it again on Enter.
+            // The code field is the exception: it needs the focus to be typed into.
             var events = EventSystem.current;
-            if (events != null && events.currentSelectedGameObject != null) events.SetSelectedGameObject(null);
+            var selected = events != null ? events.currentSelectedGameObject : null;
+            if (selected != null && (_codeInput == null || selected != _codeInput.gameObject))
+                events.SetSelectedGameObject(null);
 
             var keyboard = Keyboard.current;
-            if (keyboard != null) OnKeys(keyboard);
+            bool keys = keyboard != null && !SceneTransition.Busy && !intro;
+            if (_options != null) _options.Update(keys ? keyboard : null);
+            else if (keys) OnKeys(keyboard);
         }
 
         void OnKeys(Keyboard keys)
         {
             bool enter = keys.enterKey.wasPressedThisFrame || keys.numpadEnterKey.wasPressedThisFrame;
+            if (_mp != MpScreen.None)
+            {
+                OnMultiplayerKeys(keys, enter);
+                return;
+            }
             if (_credits != null)
             {
                 if (enter || keys.escapeKey.wasPressedThisFrame) CloseCredits();
@@ -95,24 +186,25 @@ namespace ArcaneGambit.Game
             var canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasGo.transform.SetParent(transform, false);
             canvasGo.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-            _scaler = canvasGo.GetComponent<CanvasScaler>();
-            _scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            _scaler.referenceResolution = Stage;
-            _scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            ApplyProfile();
+            UiProfile.Apply(canvasGo.GetComponent<CanvasScaler>(), s_size);
             _root = (RectTransform)canvasGo.transform;
 
             Ui.Stretch(Ui.Image(_root, "Background", Ui.Art("Background"), 0, 0, 0, 0).rectTransform);
-            Ui.Stretch(Ui.Image(_root, "Backdrop", Ui.Art("Menu_Backdrop"), 0, 0, 0, 0).rectTransform);
+            var backdrop = Ui.Stretch(Ui.Image(_root, "Backdrop", Ui.Art("Menu_Backdrop"), 0, 0, 0, 0).rectTransform);
+            AddIntro(backdrop, 0f, 0.8f, EaseOut);
 
             var stage = CenteredStage(_root);
             BuildBrand(stage);
             BuildMenu(stage);
 
-            var version = Ui.Label(_root, Loc.Get("ui.menu.version"), 48f, StageHeight - 32f - 24f, 400f, 24f);
-            version.fontSize = 17f;
+            var version = Ui.Label(_root, Loc.Format("ui.menu.version", Application.version), VersionX,
+                StageHeight - VersionBottom - 24f, 400f, 24f);
+            version.fontSize = VersionFont;
             version.characterSpacing = 14f;
             version.color = Ui.InkBody;
             Ui.Anchor(version.rectTransform, Vector2.zero, Vector2.zero, Stage);
+            AddIntro(version.rectTransform, 1.6f, 0.4f, EaseOut);
         }
 
         static RectTransform CenteredStage(RectTransform parent)
@@ -123,35 +215,37 @@ namespace ArcaneGambit.Game
             return stage;
         }
 
-        static void BuildBrand(RectTransform stage)
+        void BuildBrand(RectTransform stage)
         {
-            const float titleHeight = 122f, taglineHeight = 84f;
+            float titleHeight = BrandFont * 1.09f, taglineHeight = TaglineFont * 2.8f, ornamentWidth = OrnamentWidth;
             float center = BrandX + BrandWidth * 0.5f;
-            Ui.Image(stage, "Logo", Ui.Art("Logo"), center - LogoSize * 0.5f, BrandY, LogoSize, LogoSize);
+            var logo = Ui.Image(stage, "Logo", Ui.Art("Logo"), center - LogoSize * 0.5f, BrandY, LogoSize, LogoSize);
+            AddIntroRise(logo.rectTransform, 0f, 0.6f);
+
             float y = BrandY + LogoSize + BrandGap;
-            var title = Ui.Text(stage, Rubricate(Loc.Get("ui.title")), Ui.TitleFont, 112f, Ui.InkText, BrandX, y,
+            var title = Ui.Text(stage, Ui.Brand(Loc.Get("ui.title"), 114), Ui.TitleFont, BrandFont, Ui.InkText, BrandX, y,
                 BrandWidth, titleHeight, TextAlignmentOptions.Bottom);
             title.textWrappingMode = TextWrappingModes.NoWrap;
+            AddIntroTitle(stage, title, center, y, titleHeight);
             y += titleHeight + BrandGap;
-            Ornament(stage, center, y + DividerHeight * 0.5f);
+
+            // Centred pivot: the filet opens from its diamond outwards.
+            var ornament = Ui.Centered(Ui.Rect(stage, "Ornament", center - ornamentWidth * 0.5f, y, ornamentWidth,
+                DividerHeight));
+            Ornament(ornament, ornamentWidth, DividerHeight * 0.5f);
+            AddIntro(ornament, 0.95f, 0.4f, EaseRise, t => ornament.localScale = new Vector3(t, 1f, 1f));
             y += DividerHeight + BrandGap;
-            Ui.Text(stage, Loc.Get("ui.menu.tagline"), Ui.ItalicFont, 30f, Ui.Ink, BrandX, y, BrandWidth, taglineHeight,
-                TextAlignmentOptions.Top);
+
+            var tagline = Ui.Text(stage, Loc.Get("ui.menu.tagline"), Ui.ItalicFont, TaglineFont, Ui.Ink, BrandX, y, BrandWidth,
+                taglineHeight, TextAlignmentOptions.Top);
+            AddIntro(tagline.rectTransform, 1.05f, 0.4f, EaseOut);
         }
 
-        static string Rubricate(string text)
+        static void Ornament(RectTransform parent, float width, float y)
         {
-            var words = text.Split(' ');
-            for (int i = 0; i < words.Length; i++)
-                if (words[i].Length > 0)
-                    words[i] = $"<color={Ui.ToHex(Ui.Rubric)}><size=114%>{words[i][0]}</size></color>{words[i].Substring(1)}";
-            return string.Join(" ", words);
-        }
-
-        static void Ornament(RectTransform parent, float center, float y)
-        {
-            Ui.Line(parent, center - 160f, y - 0.6f, 140f, 1.2f);
-            Ui.Line(parent, center + 20f, y - 0.6f, 140f, 1.2f);
+            float center = width * 0.5f;
+            Ui.Line(parent, 0f, y - 0.6f, center - 20f, 1.2f);
+            Ui.Line(parent, center + 20f, y - 0.6f, center - 20f, 1.2f);
             foreach (float dx in new[] { -14f, 14f })
                 Ui.Image(parent, "Dot", Ui.Pill(Ui.Ink, Ui.Ink, 4, 0f), center + dx - 2f, y - 2f, 4f, 4f);
             Ui.Diamond(parent, center, y, 10f, Ui.Rubric);
@@ -159,25 +253,32 @@ namespace ArcaneGambit.Game
 
         void BuildMenu(RectTransform stage)
         {
-            const float headerHeight = 24f, headerMargin = 8f;
+            // A phone leaves the app through the system, so its menu has no Exit and ends on the last button.
+            bool exit = !UiProfile.Mobile;
+            float headerHeight = HeaderHeight, headerMargin = HeaderMargin;
             float height = PanelTop + headerHeight + headerMargin + ButtonGap + 4f * (ButtonHeight + ButtonGap)
-                + DividerHeight + ButtonGap + ButtonHeight + PanelPadding;
-            var panel = Ui.Modal(stage, PanelX, PanelY, PanelWidth, height);
+                + (exit ? DividerHeight + ButtonGap + ButtonHeight : -ButtonGap) + PanelPadding;
+            // The panel's shadow is a sibling, so both ride in one layer.
+            var layer = Ui.Rect(stage, "Menu", 0f, 0f, StageWidth, StageHeight);
+            AddIntroRise(layer, 1.2f, 0.6f);
+            var panel = Ui.Modal(layer, PanelX, PanelY, PanelWidth, height);
 
             var header = Ui.Label(panel, Loc.Get("ui.menu.header"), 0f, PanelTop, PanelWidth, headerHeight,
                 TextAlignmentOptions.Top);
-            header.fontSize = 18f;
+            header.fontSize = HeaderFont;
             header.characterSpacing = 30f;
 
             float y = PanelTop + headerHeight + headerMargin + ButtonGap;
-            y = AddButton(panel, "ui.menu.singlePlayer", y, () => SceneManager.LoadScene(GameManager.SceneName));
-            y = AddButton(panel, "ui.menu.multiplayer", y, null);
-            y = AddButton(panel, "ui.menu.options", y, null);
+            y = AddButton(panel, "ui.menu.singlePlayer", y, () => SceneTransition.Load(GameManager.SceneName));
+            y = AddButton(panel, "ui.menu.multiplayer", y, OpenHall);
+            y = AddButton(panel, "ui.menu.options", y, OpenOptions);
             y = AddButton(panel, "ui.menu.credits", y, OpenCredits);
+            if (!exit) return;
 
             float center = PanelWidth * 0.5f, line = y + DividerHeight * 0.5f;
-            Ui.Line(panel, PanelPadding + 40f, line - 0.6f, 172f, 1.2f);
-            Ui.Line(panel, center + 20f, line - 0.6f, 172f, 1.2f);
+            float rule = center - PanelPadding - 60f;
+            Ui.Line(panel, PanelPadding + 40f, line - 0.6f, rule, 1.2f);
+            Ui.Line(panel, center + 20f, line - 0.6f, rule, 1.2f);
             Ui.Diamond(panel, center, line, 8.5f, Ui.Rubric);
             y += DividerHeight + ButtonGap;
 
@@ -197,7 +298,7 @@ namespace ArcaneGambit.Game
                 Ui.DashedBox(root, 0.75f, 0.75f, w - 1.5f, h - 1.5f, Ui.Ink, 1.5f, 4f, 3f);
                 Ui.Text(root, text, Ui.TitleFont, ButtonFont, Ui.InkFaded, 0f, 0f, w, h, TextAlignmentOptions.Center)
                     .characterSpacing = 6f;
-                Ui.Text(root, Loc.Get("ui.menu.soon"), Ui.ItalicFont, 17f, Ui.InkSoft, 0f, 0f, w - 20f, h,
+                Ui.Text(root, Loc.Get("ui.menu.soon"), Ui.ItalicFont, SoonFont, Ui.InkSoft, 0f, 0f, w - 20f, h,
                     TextAlignmentOptions.MidlineRight);
                 return y + h + ButtonGap;
             }
@@ -240,6 +341,36 @@ namespace ArcaneGambit.Game
             b.Root.anchoredPosition = new Vector2(b.Root.anchoredPosition.x, -b.Y + t);
         }
 
+        void OpenOptions()
+        {
+            if (_options == null) _options = new OptionsModal(() => _root, ReloadUi, () => _options = null);
+        }
+
+        // The menu is built once from Loc, so a new language means building it again.
+        void ReloadUi()
+        {
+            Destroy(_root.gameObject);
+            _buttons.Clear();
+            _focus = -1;
+            BuildUi();
+            _intro.Clear();
+        }
+
+        // Everything is laid out for one profile, so another one means building it all again, open screens included.
+        void ChangeProfile()
+        {
+            bool credits = _credits != null;
+            ReloadUi();
+            _credits = null;
+            if (credits) OpenCredits();
+            if (_mp != MpScreen.None)
+            {
+                _mpLayer = null;
+                Rebuild();
+            }
+            if (_options != null) _options.Relayout();
+        }
+
         void OpenCredits()
         {
             if (_credits != null) return;
@@ -251,7 +382,8 @@ namespace ArcaneGambit.Game
             close.onClick.AddListener(CloseCredits);
 
             const float w = 760f, h = 404f;
-            var panel = Ui.Modal(CenteredStage(_credits), (StageWidth - w) * 0.5f, (StageHeight - h) * 0.5f, w, h);
+            var design = UiProfile.Design;
+            var panel = Ui.Modal(UiProfile.ModalStage(_credits, w, h), (design.x - w) * 0.5f, (design.y - h) * 0.5f, w, h);
             var eyebrow = Ui.Label(panel, Loc.Get("ui.credits.eyebrow"), 0f, 44f, w, 26f, TextAlignmentOptions.Top);
             eyebrow.fontSize = 18f;
             eyebrow.characterSpacing = 20f;

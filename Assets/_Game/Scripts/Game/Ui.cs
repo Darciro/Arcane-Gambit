@@ -10,6 +10,80 @@ namespace ArcaneGambit.Game
 {
     public enum CursorKind { Default, Clickable, Attack, Unavailable, Wait, Drag }
 
+    public enum UiSize { Small, Medium, Large, Mobile }
+
+    /// <summary>
+    /// The screen profiles of the Resoluções design doc: the height of the screen picks the logical area the
+    /// interface is laid out in. Medium is the area every modal is drawn for. The Android player has a single
+    /// profile of its own, the landscape phone of the "mobile-horizontal" design doc.
+    /// </summary>
+    public static class UiProfile
+    {
+        public static readonly Vector2 Design = new Vector2(1920f, 1080f);
+        public static readonly Vector2 MobileArea = new Vector2(844f, 390f);
+        const int MediumHeight = 900, LargeHeight = 1300;
+        const float ModalMargin = 20f, MobileModalMargin = 8f, MobileSide = 16f;
+
+        // A compile-time switch, so the Editor shows the phone layout while Android is the build target.
+#if UNITY_ANDROID
+        public static readonly bool Mobile = true;
+#else
+        public static readonly bool Mobile = false;
+#endif
+
+        public static UiSize Size => Mobile ? UiSize.Mobile
+            : Screen.height < MediumHeight ? UiSize.Small : Screen.height < LargeHeight ? UiSize.Medium : UiSize.Large;
+
+        public static Vector2 Reference(UiSize size) => size switch
+        {
+            UiSize.Small => new Vector2(1440f, 810f),
+            UiSize.Large => new Vector2(2048f, 1152f),
+            UiSize.Mobile => MobileArea,
+            _ => Design,
+        };
+
+        /// <summary>
+        /// The margin, in canvas units, the phone layout keeps on both sides. It is the wider of the two safe-area
+        /// insets, because the cutout changes side when the phone is turned around.
+        /// </summary>
+        public static float SideInset
+        {
+            get
+            {
+                float scale = Mathf.Min(Screen.width / MobileArea.x, Screen.height / MobileArea.y);
+                var safe = Screen.safeArea;
+                return Mathf.Max(MobileSide, safe.xMin / scale, (Screen.width - safe.xMax) / scale);
+            }
+        }
+
+        // Expand keeps the logical area at least as large as the reference on any aspect ratio.
+        public static void Apply(CanvasScaler scaler, UiSize size)
+        {
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = Reference(size);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+        }
+
+        /// <summary>The scale that makes a modal drawn for the Medium area fit the current one.</summary>
+        public static float Fit(float w, float h)
+        {
+            var area = Reference(Size);
+            float margin = Mobile ? MobileModalMargin : ModalMargin;
+            return Mathf.Min(1f, (area.x - margin * 2f) / w, (area.y - margin * 2f) / h);
+        }
+
+        /// <summary>A centered, Medium-sized stage, shrunk when a <paramref name="w"/> by <paramref name="h"/> modal would not fit.</summary>
+        public static RectTransform ModalStage(Transform parent, float w, float h)
+        {
+            var stage = Ui.Rect(parent, "Stage", 0, 0, Design.x, Design.y);
+            stage.anchorMin = stage.anchorMax = stage.pivot = new Vector2(0.5f, 0.5f);
+            stage.anchoredPosition = Vector2.zero;
+            float fit = Fit(w, h);
+            stage.localScale = new Vector3(fit, fit, 1f);
+            return stage;
+        }
+    }
+
     public static class Ui
     {
         public static readonly Color Parchment = Hex(0xECDFC4);
@@ -29,11 +103,12 @@ namespace ArcaneGambit.Game
 
         const float NormalWeight = 0.75f;
 
-        static TMP_FontAsset s_title, s_body, s_italic, s_fraktur;
+        static TMP_FontAsset s_title, s_body, s_italic, s_roman, s_fraktur;
         static Sprite s_panel, s_primary, s_secondary, s_solid, s_tile, s_highlight;
         static Sprite s_modal, s_dark, s_danger, s_selection, s_glow, s_menu, s_menuHover;
         static readonly Dictionary<string, Sprite> s_art = new Dictionary<string, Sprite>();
         static readonly Dictionary<string, Sprite> s_pills = new Dictionary<string, Sprite>();
+        static readonly Dictionary<string, Sprite> s_boxes = new Dictionary<string, Sprite>();
         static int s_generation;
         static readonly string[] CursorFiles = { "padrao", "clicavel", "ataque", "indisponivel", "aguardar", "arrastar" };
         static readonly Vector2[] CursorHotspots =
@@ -49,11 +124,12 @@ namespace ArcaneGambit.Game
         static void ResetStatics()
         {
             s_cursor = null;
-            s_title = s_body = s_italic = s_fraktur = null;
+            s_title = s_body = s_italic = s_roman = s_fraktur = null;
             s_panel = s_primary = s_secondary = s_solid = s_tile = s_highlight = null;
             s_modal = s_dark = s_danger = s_selection = s_glow = s_menu = s_menuHover = null;
             s_art.Clear();
             s_pills.Clear();
+            s_boxes.Clear();
             s_generation++;
         }
 
@@ -85,6 +161,7 @@ namespace ArcaneGambit.Game
         public static TMP_FontAsset TitleFont { get { if (s_title == null) LoadFonts(); return s_title; } }
         public static TMP_FontAsset BodyFont { get { if (s_body == null) LoadFonts(); return s_body; } }
         public static TMP_FontAsset ItalicFont { get { if (s_italic == null) LoadFonts(); return s_italic; } }
+        public static TMP_FontAsset RomanFont { get { if (s_roman == null) LoadFonts(); return s_roman; } }
         public static TMP_FontAsset FrakturFont { get { if (s_fraktur == null) LoadFonts(); return s_fraktur; } }
 
         static void LoadFonts()
@@ -92,10 +169,12 @@ namespace ArcaneGambit.Game
             s_body = CreateFont("EBGaramond", "Body");
             s_title = CreateFont("IMFellEnglishSC", "Title");
             s_italic = CreateFont("IMFellEnglish-Italic", "Italic");
+            s_roman = CreateFont("IMFellEnglish-Regular", "Roman");
             s_fraktur = CreateFont("UnifrakturMaguntia", "Fraktur");
             var fallback = new List<TMP_FontAsset> { s_body };
             s_title.fallbackFontAssetTable = fallback;
             s_italic.fallbackFontAssetTable = fallback;
+            s_roman.fallbackFontAssetTable = fallback;
             s_fraktur.fallbackFontAssetTable = new List<TMP_FontAsset> { s_title };
         }
 
@@ -117,11 +196,22 @@ namespace ArcaneGambit.Game
             return asset;
         }
 
-        public static string Initial(string text, int percent = 135)
+        public static string Initial(string text, int percent = 135) => Capital(text, FrakturFont, percent);
+
+        public static string RomanInitial(string text, int percent = 120) => Capital(text, RomanFont, percent);
+
+        /// <summary>The game's name: every word opens with a rubric IM Fell English capital.</summary>
+        public static string Brand(string text, int percent)
+        {
+            var words = text.Split(' ');
+            for (int i = 0; i < words.Length; i++) words[i] = Capital(words[i], RomanFont, percent);
+            return string.Join(" ", words);
+        }
+
+        static string Capital(string text, TMP_FontAsset font, int percent)
         {
             if (string.IsNullOrEmpty(text)) return text;
-            if (s_fraktur == null) LoadFonts();
-            return $"<font=\"{s_fraktur.name}\"><color={ToHex(Rubric)}><size={percent}%>{text[0]}</size></color></font>{text.Substring(1)}";
+            return $"<font=\"{font.name}\"><color={ToHex(Rubric)}><size={percent}%>{text[0]}</size></color></font>{text.Substring(1)}";
         }
 
         public static string SmallCaps(string text) => $"<font=\"{TitleFont.name}\">{text}</font>";
@@ -165,6 +255,14 @@ namespace ArcaneGambit.Game
         public static Sprite Framed => MenuButton;
         public static Sprite MenuButtonHover => s_menuHover != null ? s_menuHover
             : s_menuHover = Frame(Ink, Parchment, 0, 5, 1, solid: true);
+
+        /// <summary>A sliced box with an outer line, a band of fill, then a thin inner line, as the parchment panels draw them.</summary>
+        public static Sprite Boxed(Color fill, Color line, int outer = 2, int gap = 3, int inner = 1)
+        {
+            string key = $"{fill}{line}{outer}{gap}{inner}";
+            if (s_boxes.TryGetValue(key, out var cached) && cached != null) return cached;
+            return s_boxes[key] = Frame(fill, line, outer, gap, inner);
+        }
 
         public static Sprite Pill(Color fill, Color line, int radius, float width = 1f)
         {
@@ -442,6 +540,31 @@ namespace ArcaneGambit.Game
             return diamond;
         }
 
+        /// <summary>The round 44-unit button of the phone layout; the caller draws its glyph inside.</summary>
+        public static Button IconButton(Transform parent, float x, float y, UnityAction onClick, bool light = false)
+        {
+            var face = light
+                ? Pill(new Color(0.125f, 0.082f, 0.039f, 0.35f), new Color(Cream.r, Cream.g, Cream.b, 0.8f), 22, 1.5f)
+                : Pill(new Color(1f, 0.98f, 0.93f, 0.4f), Ink, 22, 1.5f);
+            return MakeButton(Sliced(parent, "Icon Button", face, x, y, 44f, 44f, raycast: true), onClick);
+        }
+
+        public static void Stroke(Transform parent, float centerX, float centerY, float length, float angle, Color color,
+            float thickness = 2f)
+        {
+            var stroke = Image(parent, "Stroke", Solid, centerX - length * 0.5f, centerY - thickness * 0.5f, length, thickness);
+            stroke.color = color;
+            Centered(stroke.rectTransform).localRotation = Quaternion.Euler(0f, 0f, angle);
+        }
+
+        /// <summary>An arrowhead pointing left (<paramref name="direction"/> -1) or right (1).</summary>
+        public static void Chevron(Transform parent, float centerX, float centerY, float size, int direction, Color color)
+        {
+            float reach = size * 0.354f;
+            Stroke(parent, centerX, centerY - reach, size, -45f * direction, color);
+            Stroke(parent, centerX, centerY + reach, size, 45f * direction, color);
+        }
+
         public static void Danger(Button button)
         {
             ((Image)button.targetGraphic).sprite = DangerSprite;
@@ -500,6 +623,41 @@ namespace ArcaneGambit.Game
                     11.5f, WeatherBandTop + 1f, CardWidth - 23f, 23f, TextAlignmentOptions.Center);
                 band.characterSpacing = 8f;
             }
+            return root;
+        }
+
+        public const float MiniCardWidth = 66f, MiniCardHeight = 106f;
+
+        /// <summary>The compact card of the phone's hand: kind, cost, art and name; the text is read enlarged.</summary>
+        public static RectTransform MiniCard(Transform parent, CardInfo info)
+        {
+            const float w = MiniCardWidth, h = MiniCardHeight, badge = 17f;
+            var root = Rect(parent, "Card " + info.Id, 0, 0, w, h);
+            Sliced(root, "Frame", Pill(Parchment, new Color(0.7f, 0.61f, 0.44f), 4), 0, 0, w, h, raycast: true);
+            Sliced(root, "Rule", Boxed(new Color(Ink.r, Ink.g, Ink.b, 0f), Ink, 1, 2, 1), 3f, 3f, w - 6f, h - 6f);
+            if (info.Kind == CardKind.Arcane) DashedBox(root, 9f, 9f, w - 18f, h - 18f, Rubric, 1f, 3f, 2f);
+
+            var kind = Image(root, "Kind", Art("Kind_Badge"), 7f, 8f, badge, badge);
+            Image(kind.transform, "Icon", KindIcon(info.Kind), 3f, 3f, 11f, 11f).color = Ink;
+            float sealX = w - 7f - badge;
+            if (info.CostUndefined) Seal(root, "?", Art("Seal_Undefined"), Rubric, 0.5f, sealX, 8f, badge);
+            else if (info.MinCost < info.Cost)
+                Seal(root, Roman(info.MinCost) + "–" + Roman(info.Cost), Art("Seal"), Cream, 0.36f, sealX, 8f, badge)
+                    .characterSpacing = -2f;
+            else Seal(root, info.Cost, sealX, 8f, badge);
+
+            Line(root, 7f, 28f, w - 14f, 1f);
+            var art = Image(root, "Art", Art("Card_" + info.Id), 7f, 29f, w - 14f, 33f);
+            art.preserveAspect = true;
+            art.enabled = art.sprite != null;
+            Line(root, 7f, 62f, w - 14f, 1f);
+
+            var name = Text(root, Loc.CardName(info.Id), TitleFont, 11f, InkText, 5f, 66f, w - 10f, h - 66f - 7f,
+                TextAlignmentOptions.Top);
+            name.lineSpacing = -12f;
+            name.enableAutoSizing = true;
+            name.fontSizeMin = 8.5f;
+            name.fontSizeMax = 11f;
             return root;
         }
 

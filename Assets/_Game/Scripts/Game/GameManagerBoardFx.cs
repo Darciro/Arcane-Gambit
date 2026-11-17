@@ -432,7 +432,9 @@ namespace ArcaneGambit.Game
         {
             var army = _armies[(int)side];
             int index = System.Array.IndexOf(Match.Recruitable, type);
-            return army?.ReserveCounts != null && index >= 0 ? army.ReserveCounts[index] : null;
+            // The phone's opponent bar shows no reserve, so its list is empty.
+            return army?.ReserveCounts != null && index >= 0 && index < army.ReserveCounts.Length
+                ? army.ReserveCounts[index] : null;
         }
 
         FxJob PlayBoard(FxCueId cue, Vector3 position, GameObject target, float intensity = 1f,

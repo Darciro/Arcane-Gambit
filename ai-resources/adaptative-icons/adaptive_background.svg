@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 432 432">
+<defs>
+<radialGradient id="vg" cx="216" cy="206" r="300" gradientUnits="userSpaceOnUse">
+<stop offset="0.3" stop-color="#8a6230" stop-opacity="0"></stop>
+<stop offset="1" stop-color="#8a6230" stop-opacity="0.42"></stop>
+</radialGradient>
+<filter id="grain" x="0" y="0" width="100%" height="100%">
+<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" stitchTiles="stitch" result="f"></feTurbulence>
+<feColorMatrix in="f" type="matrix" values="0 0 0 0 0.23  0 0 0 0 0.15  0 0 0 0 0.08  0.45 0 0 0 -0.16" result="fine"></feColorMatrix>
+<feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="3" seed="11" result="s"></feTurbulence>
+<feColorMatrix in="s" type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0 0.12  0.9 0 0 0 -0.4" result="stain"></feColorMatrix>
+<feMerge><feMergeNode in="stain"></feMergeNode><feMergeNode in="fine"></feMergeNode></feMerge>
+</filter>
+</defs>
+<!-- Pergaminho de ponta a ponta, sem transparência: a máscara do Android recorta a forma. -->
+<rect width="432" height="432" fill="#ecdfc4"></rect>
+<rect width="432" height="432" fill="url(#vg)"></rect>
+<rect width="432" height="432" fill="#000" filter="url(#grain)"></rect>
+</svg>

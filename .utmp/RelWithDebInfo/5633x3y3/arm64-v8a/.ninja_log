@@ -1,0 +1,23 @@
+# ninja log v5
+1445	1488	1794672700232616875	/Users/ricardocarvalho/Projects/Arcane Gambit/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5633x3y3/obj/arm64-v8a/libgame.so	235222ccdcb3ed22
+1	1445	1794672700188545606	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	f3af43cfa75fa5a4
+2	1360	1794672700101956128	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	8d3c6807a1920724
+6	1296	1794672700036600547	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	b35944c302018078
+1	1233	1794672699968146175	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	e4d3594721b579ee
+1	1206	1794672699948679136	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	da4810b9a94080b4
+1	1180	1794672699922505469	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	6be98ad1771b7960
+2	1167	1794672699907043981	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c030fe663ebeed3b
+229	347	1794672699078081680	/Users/ricardocarvalho/Projects/Arcane Gambit/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5633x3y3/obj/arm64-v8a/libswappywrapper.so	e41ef09fe2ec9b2b
+3	1179	1794672699921809752	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	58eaab5ef277409e
+7	228	1794672698972713922	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	9b4f7fd7de36ae34
+6	563	1794933363276425078	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	9b4f7fd7de36ae34
+564	835	1794933363521733479	/Users/ricardocarvalho/Projects/Arcane Gambit/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5633x3y3/obj/arm64-v8a/libswappywrapper.so	e41ef09fe2ec9b2b
+5	971	1794933363684456402	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	6be98ad1771b7960
+5	972	1794933363686416211	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c030fe663ebeed3b
+5	989	1794933363706337100	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	da4810b9a94080b4
+6	1003	1794933363720388688	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	58eaab5ef277409e
+5	1011	1794933363727802869	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	e4d3594721b579ee
+6	1048	1794933363765003860	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	b35944c302018078
+5	1119	1794933363835664480	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	8d3c6807a1920724
+5	1164	1794933363881196096	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	f3af43cfa75fa5a4
+1164	1204	1794933363921529597	/Users/ricardocarvalho/Projects/Arcane Gambit/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5633x3y3/obj/arm64-v8a/libgame.so	235222ccdcb3ed22

@@ -24,11 +24,11 @@ namespace ArcaneGambit.Game
             public Dictionary<string, GameObject> Named;
         }
 
-        RectTransform _cardFxLayer, _deckPile;
+        RectTransform _cardFxLayer, _deckPile, _playSlot;
         Sprite _runeCircle;
         readonly List<LogEntry> _playedCards = new List<LogEntry>();
         readonly List<RectTransform> _foresightCards = new List<RectTransform>();
-        int _drawn, _moraleGain;
+        int _drawn, _heldDraws, _moraleGain;
         bool _foresightFxPlayed, _gameOverFxPlayed;
         TextMeshProUGUI _gameOverTitle;
         readonly int?[] _shownMorale = new int?[2];
@@ -48,7 +48,7 @@ namespace ArcaneGambit.Game
         {
             for (int i = _cardFxLayer.childCount - 1; i >= 0; i--) Destroy(_cardFxLayer.GetChild(i).gameObject);
             _playedCards.Clear();
-            _drawn = _moraleGain = 0;
+            _drawn = _heldDraws = _moraleGain = 0;
             _foresightFxPlayed = _gameOverFxPlayed = false;
             _shownMorale[0] = _shownMorale[1] = null;
             _shownDeck = _shownDiscard = null;
@@ -84,12 +84,9 @@ namespace ArcaneGambit.Game
                     RunFx(PlayedCardAsync(e, delay, destroyCancellationToken));
                     delay += DrawStagger;
                 }
-                int hand = _handCards.Count;
-                for (int i = 0; i < _drawn; i++)
-                {
-                    int index = hand - _drawn + i;
-                    if (index >= 0) RunFx(DrawAsync(index, i * DrawStagger, destroyCancellationToken));
-                }
+                // The turn is announced first: cards drawn under the banner stay hidden until it leaves.
+                if (_turnBanner != null) _heldDraws += _drawn;
+                else PlayDraws(_drawn);
                 if (_moraleGain > 0) PlayMoraleGain(_moraleGain);
             }
             _playedCards.Clear();
@@ -99,6 +96,24 @@ namespace ArcaneGambit.Game
             var p = _match.Get(_human);
             _shownDeck = p.Deck.Count;
             _shownDiscard = p.Discard.Count;
+        }
+
+        void PlayDraws(int count)
+        {
+            int hand = _handCards.Count;
+            for (int i = 0; i < count; i++)
+            {
+                int index = hand - count + i;
+                if (index >= 0) RunFx(DrawAsync(index, i * DrawStagger, destroyCancellationToken));
+            }
+        }
+
+        // Call before the Refresh that reveals the hand; the draws then play on the rebuilt cards.
+        int TakeHeldDraws()
+        {
+            int held = _heldDraws;
+            _heldDraws = 0;
+            return held;
         }
 
         // Entry point for fire-and-forget animations: nothing may escape into Unity's synchronization context.
@@ -140,10 +155,11 @@ namespace ArcaneGambit.Game
             if (delay > 0f) await Awaitable.WaitForSecondsAsync(delay, ct);
             var info = CardCatalog.Get(e.Card);
             bool mine = e.Side == _human;
-            var slot = Center(_actionSlot);
+            // Where a played card is shown: the action panel's slot, or the middle of the board on a phone.
+            var slot = Center(_playSlot);
             bool drop = e.Kind == LogKind.Reacted && !mine;
-            var ghost = CreateGhost(info, ActionCardScale,
-                drop ? slot + Vector3.up * GhostDrop * _actionSlot.lossyScale.y : slot, faceDown: false,
+            var ghost = CreateGhost(info, PlayCardScale,
+                drop ? slot + Vector3.up * GhostDrop * _playSlot.lossyScale.y : slot, faceDown: false,
                 arcane: info.Kind == CardKind.Arcane);
             var anchors = new List<GameObject>();
             try

@@ -87,7 +87,8 @@ namespace ArcaneGambit.FX
         public void UseFont(TMP_FontAsset font)
         {
             if (_floatingText == null || font == null) return;
-            foreach (var text in _floatingText.GetComponentsInChildren<MMFloatingTextMeshPro>(true))
+            // Feel parks the pool at the scene root, not under the spawner.
+            foreach (var text in FindObjectsByType<MMFloatingTextMeshPro>(FindObjectsInactive.Include))
                 if (text.TargetTextMeshPro != null) text.TargetTextMeshPro.font = font;
         }
 
