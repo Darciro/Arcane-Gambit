@@ -1,0 +1,12 @@
+# ninja log v5
+6	112	1795108813289667763	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	98c897374442f276
+113	212	1795108813365047371	/Users/ricardocarvalho/Projects/Arcane Gambit/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/3j6s64l4/obj/arm64-v8a/libswappywrapper.so	16f1926de4c44fd0
+5	1056	1795108814231546765	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	ed0d5baa83095684
+3	1066	1795108814241336016	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	c015fc465e2fe558
+1	1113	1795108814287223704	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	dbcb7c317919832d
+0	1164	1795108814340044660	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	1cb67985b1806989
+1	1219	1795108814391378144	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	4b2c238f5adb3610
+6	1236	1795108814410810478	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	8e624c3c03761cd5
+2	1319	1795108814490976879	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	868027b071c2ded2
+0	1350	1795108814523067530	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	5d2f559b725f627e
+1350	1438	1795108814609920905	/Users/ricardocarvalho/Projects/Arcane Gambit/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/3j6s64l4/obj/arm64-v8a/libgame.so	c3323e20c4b14c69

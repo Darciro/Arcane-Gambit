@@ -10,7 +10,7 @@ namespace ArcaneGambit.Game
 {
     /// <summary>
     /// Board FX that span several plays, driven here from the log: the rehearsals (FX_SPEC 7, Lightning Storm and
-    /// Fireball), crossbow volleys, the weather's lasting look, markers rising, and the armies mustering. A unit a
+    /// Fireball), crossbow volleys, the weather's layers on the board, markers rising, and the armies mustering. A unit a
     /// projectile or a bolt captures is held on the board (its view is not faded yet) until the effect reaches the
     /// moment of impact, then released to the usual capture animation.
     /// </summary>
@@ -20,17 +20,6 @@ namespace ArcaneGambit.Game
         const float ThunderMin = 8f, ThunderMax = 14f;
         const int VolleyBolts = 3;
         const float VolleyStagger = 0.08f, MusterRankDelay = 0.08f, MusterFileDelay = 0.015f;
-        static readonly FxLook StormLook = new FxLook(0.2f, -0.25f);
-
-        // FX_SPEC 8 E. Combined by FxAmbience: the strongest condition wins on each channel.
-        static FxLook? WeatherLook(CardId card) => card switch
-        {
-            CardId.LightningStorm => StormLook,
-            CardId.Blizzard => new FxLook(0.2f, 0f, -30f),
-            CardId.Fog => new FxLook(0.3f),
-            CardId.MoonlessNight => new FxLook(0.45f, -0.8f),
-            _ => null,
-        };
 
         static bool Projectile(CardId card) => card == CardId.Fireball || card == CardId.CrossbowVolley || card == CardId.SiegeOrder;
 
@@ -42,6 +31,8 @@ namespace ArcaneGambit.Game
         }
 
         RectTransform _board, _boardFxUnder, _boardFxOver;
+        BoardWeather _weather;
+        readonly List<Vector3> _torchSpots = new List<Vector3>();
         Sprite _markRing;
         readonly HashSet<Coord> _claims = new HashSet<Coord>();
         readonly HashSet<Coord> _projectileTargets = new HashSet<Coord>();
@@ -67,6 +58,7 @@ namespace ArcaneGambit.Game
             _projectileTargets.Clear();
             _presented.Clear();
             if (Ambience != null) Ambience.ClearAll();
+            if (_weather != null) _weather.Clear();
         }
 
         /// <summary>Before the events of a sync: which captures an effect will present, from the log about to be read.</summary>
@@ -128,7 +120,6 @@ namespace ArcaneGambit.Game
                     RunFx(StormStrikeAsync(e, destroyCancellationToken));
                     break;
                 case LogKind.WeatherCleared:
-                    if (Ambience != null) Ambience.Clear(e.Card.ToString());
                     if (e.Card != CardId.LightningStorm) break;
                     StopThunder();
                     StopStormMark();
@@ -160,16 +151,30 @@ namespace ArcaneGambit.Game
             }
         }
 
-        /// <summary>A condition settles over the board once its notice has been read; 7.1 A for the storm.</summary>
-        void OnWeatherBoardFx(CardId card)
+        /// <summary>
+        /// A condition settles over the board once its notice has been read (7.1 A for the storm): its layers fade in
+        /// right after the entrance. One cleared while its notice was open never settles, unless the sandbox forces it.
+        /// </summary>
+        void OnWeatherBoardFx(CardId card, FxJob entrance, bool force = false)
         {
-            if (FxDirector == null) return;
-            if (Ambience != null && WeatherLook(card) is FxLook look) Ambience.Set(card.ToString(), look);
-            if (card != CardId.LightningStorm) return;
-            PlayBoard(FxCueId.StormArrival, Vector3.zero, null);
-            StopThunder();
-            _thunder = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
-            RunFx(ThunderAsync(_thunder.Token));
+            if (FxDirector != null && card == CardId.LightningStorm)
+            {
+                entrance = PlayBoard(FxCueId.StormArrival, Vector3.zero, null);
+                StopThunder();
+                _thunder = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+                RunFx(ThunderAsync(_thunder.Token));
+            }
+            if (_weather != null && (force || _match.HasCondition(card))) _weather.Show(card, entrance);
+        }
+
+        // Moonless Night's torches follow the player's own army.
+        IReadOnlyList<Vector3> TorchSpots()
+        {
+            _torchSpots.Clear();
+            foreach (var unit in _match.Units)
+                if (unit.Side == _human && _pieces.TryGetValue(unit.Id, out var piece) && piece.Rt != null)
+                    _torchSpots.Add(piece.Rt.TransformPoint(piece.Rt.rect.center));
+            return _torchSpots;
         }
 
         async Awaitable ThunderAsync(CancellationToken ct)
@@ -519,7 +524,7 @@ namespace ArcaneGambit.Game
             switch (cue)
             {
                 case FxCueId.StormArrival:
-                    OnWeatherBoardFx(CardId.LightningStorm);
+                    OnWeatherBoardFx(CardId.LightningStorm, null, force: true);
                     break;
                 case FxCueId.StormMark:
                     StormMark(square);
@@ -531,7 +536,7 @@ namespace ArcaneGambit.Game
                 case FxCueId.ConditionRemoved:
                     StopThunder();
                     StopStormMark();
-                    if (Ambience != null) Ambience.ClearAll();
+                    if (_weather != null) _weather.HideAll();
                     _matchFx.Play(FxCueId.ConditionRemoved);
                     break;
                 case FxCueId.Blizzard:
@@ -547,8 +552,7 @@ namespace ArcaneGambit.Game
                         FxCueId.Mud => CardId.Mud,
                         _ => CardId.MoonlessNight,
                     };
-                    _matchFx.OnWeatherAcknowledged(weather);
-                    OnWeatherBoardFx(weather);
+                    OnWeatherBoardFx(weather, _matchFx.OnWeatherAcknowledged(weather), force: true);
                     break;
                 case FxCueId.CrossbowVolley:
                     var struck = _match.At(target);

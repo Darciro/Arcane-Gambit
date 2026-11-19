@@ -12,6 +12,18 @@ namespace ArcaneGambit.EditorTools
 
         void OnPreprocessTexture()
         {
+            // BoardWeather scrolls these through RawImage.uvRect, so they tile and keep mipmaps for small boards.
+            if (assetPath.Contains("/Resources/Weather/"))
+            {
+                var weather = (TextureImporter)assetImporter;
+                weather.textureType = TextureImporterType.Default;
+                weather.alphaIsTransparency = true;
+                weather.mipmapEnabled = true;
+                weather.npotScale = TextureImporterNPOTScale.None;
+                weather.wrapMode = UnityEngine.TextureWrapMode.Repeat;
+                weather.maxTextureSize = 4096;
+                return;
+            }
             if (!assetPath.Contains("/Resources/Art/")) return;
             var importer = (TextureImporter)assetImporter;
             // Cursor.SetCursor needs a readable, uncompressed texture without mipmaps.

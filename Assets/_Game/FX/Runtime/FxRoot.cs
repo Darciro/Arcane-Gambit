@@ -60,10 +60,11 @@ namespace ArcaneGambit.FX
             return root;
         }
 
-        public static void SetPaused(bool paused)
+        public static void SetPaused(bool paused) => SetTimeScale(paused ? 0f : 1f);
+
+        public static void SetTimeScale(float scale)
         {
-            float scale = paused ? 0f : 1f;
-            // MMTimeManager restores its normal time scale after every freeze frame, which would end a pause.
+            // MMTimeManager restores its normal time scale after every freeze frame, which would undo the change.
             if (MMTimeManager.HasInstance) MMTimeManager.Instance.NormalTimeScale = scale;
             Time.timeScale = scale;
         }

@@ -15,7 +15,8 @@ namespace ArcaneGambit.Game
     {
         enum InfoTab { None, Conditions, History, Discard }
 
-        const float MColumn = 350f, MGutter = 7f, MSheetPad = 16f, MSheetInner = 341f, MBand = 36f, MHandTop = 263f;
+        const float MColumn = 350f, MGutter = 7f, MSheetPad = 16f, MSheetInner = 341f, MBand = 36f, MHandTop = 265f;
+        const float MHandHeight = 104f, MFanRadius = 560f, MFanStep = 6f, MFanSpread = 24f, MFanLift = 18f;
         const float MBottom = 21f, MBoardView = 685f, MToastWidth = 380f, ViewerCardScale = 0.95f;
 
         static float s_side;
@@ -41,7 +42,7 @@ namespace ArcaneGambit.Game
         static void ApplyMobileProfile()
         {
             s_side = UiProfile.SideInset;
-            HandScale = Ui.MiniCardWidth / Ui.CardWidth;
+            HandScale = 0.46f;
             ActionCardScale = 0.42f;
             PlayCardScale = 0.8f;
         }
@@ -160,11 +161,11 @@ namespace ArcaneGambit.Game
             Ui.MakeButton(cancel, CancelMode).transition = Selectable.Transition.None;
             _handCancel = cancel.gameObject;
 
-            _hand = Ui.Rect(column, "Hand", 0f, MHandTop, MColumn, Ui.MiniCardHeight);
+            _hand = Ui.Rect(column, "Hand", 0f, MHandTop, MColumn, MHandHeight);
             _handGroup = _hand.gameObject.AddComponent<CanvasGroup>();
             // There is no deck on screen: drawn and discarded cards cross the right edge instead.
             _deckPile = _discardPile = Ui.Rect(column, "Deck Anchor", MColumn + s_side + 60f,
-                MHandTop + Ui.MiniCardHeight * 0.5f, 0f, 0f);
+                MHandTop + MHandHeight * 0.5f, 0f, 0f);
 
             BuildActionSheet();
             BuildInfoSheet();
@@ -535,8 +536,8 @@ namespace ArcaneGambit.Game
             RefreshInfo();
         }
 
-        // Five compact cards fit the column; a longer hand overlaps. A tap enlarges a card instead of selecting it,
-        // and the enlarged card is where it is played from.
+        // Whole cards fanned on an arc at the foot of the column, running off the bottom edge as on the PC. A tap
+        // enlarges a card instead of selecting it, and the enlarged card is where it is played from.
         void RefreshHandMobile()
         {
             for (int i = _hand.childCount - 1; i >= 0; i--) Destroy(_hand.GetChild(i).gameObject);
@@ -546,35 +547,38 @@ namespace ArcaneGambit.Game
             if (hand == null || _zoom >= hand.Count || ModalUp) _zoom = -1;
             if (hand != null)
             {
-                const float w = Ui.MiniCardWidth, h = Ui.MiniCardHeight;
-                float step = hand.Count > 1 ? Mathf.Min(w + 5f, (MColumn - w) / (hand.Count - 1)) : 0f;
+                float w = Ui.CardWidth * HandScale, h = Ui.CardHeight * HandScale;
+                // A longer hand closes the fan so its outer cards still end at the column's edges.
+                float step = hand.Count > 1 ? Mathf.Min(MFanStep, MFanSpread / (hand.Count - 1)) : 0f;
+                float middle = (hand.Count - 1) * 0.5f;
                 for (int i = 0; i < hand.Count; i++)
                 {
                     var info = CardCatalog.Get(hand[i]);
-                    var slot = Ui.Image(_hand, "Slot", Ui.Solid, step * i, 0f, w, h, raycast: true);
+                    var slot = Ui.Image(_hand, "Slot", Ui.Solid, 0f, 0f, w, h, raycast: true);
                     slot.color = Color.clear;
+                    var fan = slot.rectTransform;
+                    fan.pivot = new Vector2(0.5f, 1f - MFanRadius / h);
+                    fan.anchoredPosition = new Vector2(MColumn * 0.5f, -MFanRadius);
+                    fan.localRotation = Quaternion.Euler(0f, 0f, -step * (i - middle));
+
                     var holder = Ui.Rect(slot.transform, "Holder", 0f, 0f, w, h);
                     holder.pivot = new Vector2(0.5f, 0f);
                     holder.anchoredPosition = new Vector2(w * 0.5f, -h);
-                    var card = Ui.MiniCard(holder, info);
+                    var card = Ui.Card(holder, info, HandScale);
                     card.pivot = new Vector2(0.5f, 0f);
                     bool selected = _mode == Mode.Card && _cardIndex == i;
                     bool off = HumanOwnsTurn && !_match.CanPlay(info.Id);
-                    card.anchoredPosition = new Vector2(w * 0.5f, -h + (selected ? 6f : 0f));
+                    card.anchoredPosition = new Vector2(w * 0.5f, -h + (selected ? MFanLift : 0f));
                     if (off)
                         foreach (var graphic in card.GetComponentsInChildren<Graphic>()) graphic.color *= OffTint;
 
-                    var shadow = Ui.Sliced(card, "Shadow", Ui.Art("Card_Shadow"), -8f, -2f, w + 16f, h + 14f);
-                    shadow.pixelsPerUnitMultiplier = 5f;
-                    shadow.color = new Color(1f, 1f, 1f, 0.5f);
+                    var shadow = Ui.Sliced(card, "Shadow", Ui.Art("Card_Shadow"), -10f, -12f, w + 20f, h + 20f);
+                    shadow.pixelsPerUnitMultiplier = 4f;
+                    shadow.color = new Color(1f, 1f, 1f, 0.55f);
                     shadow.transform.SetAsFirstSibling();
                     if (selected)
-                    {
-                        var rubric = Ui.Rubric;
-                        Ui.Sliced(card, "Glow", Ui.Pill(Color.clear, new Color(rubric.r, rubric.g, rubric.b, 0.2f), 8, 2.5f),
-                            -5f, -5f, w + 10f, h + 10f);
-                        Ui.Sliced(card, "Chosen", Ui.Pill(Color.clear, rubric, 6, 2.5f), -2.5f, -2.5f, w + 5f, h + 5f);
-                    }
+                        Ui.Sliced(card, "Chosen", Ui.Pill(Color.clear, Ui.Rubric, 6, 2.75f), -5.5f, -5.5f, w + 11f,
+                            h + 11f);
                     if (i >= hand.Count - _heldDraws) card.gameObject.AddComponent<CanvasGroup>().alpha = 0f;
                     _handCards.Add(new HandCard
                     {

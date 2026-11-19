@@ -79,17 +79,15 @@ namespace ArcaneGambit.Game
         }
 
         /// <summary>A new condition's entrance waits for the player to read its notice.</summary>
-        public void OnWeatherAcknowledged(CardId card)
+        public FxJob OnWeatherAcknowledged(CardId card) => card switch
         {
-            switch (card)
-            {
-                case CardId.Blizzard: Play(FxCueId.Blizzard); break;
-                case CardId.Gale: Play(FxCueId.Gale); break;
-                case CardId.Fog: Play(FxCueId.Fog); break;
-                case CardId.Mud: Play(FxCueId.Mud); break;
-                case CardId.MoonlessNight: Play(FxCueId.MoonlessNight); break;
-            }
-        }
+            CardId.Blizzard => Play(FxCueId.Blizzard),
+            CardId.Gale => Play(FxCueId.Gale),
+            CardId.Fog => Play(FxCueId.Fog),
+            CardId.Mud => Play(FxCueId.Mud),
+            CardId.MoonlessNight => Play(FxCueId.MoonlessNight),
+            _ => null,
+        };
 
         public FxJob Play(FxCueId cue, Coord square, GameObject target, float intensity = 1f, string text = null,
             Dictionary<string, GameObject> named = null) =>

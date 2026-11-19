@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ArcaneGambit.FX;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace ArcaneGambit.Game
@@ -17,9 +16,9 @@ namespace ArcaneGambit.Game
         const float IntroRise = 16f, IntroMusicFade = 1.5f, ReducedIntroTime = 0.4f, IntroMaxStep = 1f / 30f;
         const int TitleSoftness = 120;
 
-        static readonly Func<float, float> EaseOut = t => Bezier(0f, 0f, 0.58f, 1f, t);
-        static readonly Func<float, float> EaseRise = t => Bezier(0.2f, 0.7f, 0.3f, 1f, t);
-        static readonly Func<float, float> EaseWrite = t => Bezier(0.4f, 0f, 0.2f, 1f, t);
+        static readonly Func<float, float> EaseOut = t => Ui.CubicBezier(0f, 0f, 0.58f, 1f, t);
+        static readonly Func<float, float> EaseRise = t => Ui.CubicBezier(0.2f, 0.7f, 0.3f, 1f, t);
+        static readonly Func<float, float> EaseWrite = t => Ui.CubicBezier(0.4f, 0f, 0.2f, 1f, t);
 
         sealed class IntroStep
         {
@@ -90,7 +89,7 @@ namespace ArcaneGambit.Game
         {
             if (_intro.Count == 0) return false;
             _introTime += Mathf.Min(Time.unscaledDeltaTime, IntroMaxStep);
-            if (IntroSkipped()) _introTime = _introEnd;
+            if (Ui.AnyPress()) _introTime = _introEnd;
             PoseIntro();
             if (_introTime >= _introEnd)
             {
@@ -113,36 +112,6 @@ namespace ArcaneGambit.Game
                 s.Group.alpha = s.Fades ? t : 1f;
                 s.Apply?.Invoke(t);
             }
-        }
-
-        static bool IntroSkipped()
-        {
-            var keys = Keyboard.current;
-            var mouse = Mouse.current;
-            var touch = Touchscreen.current;
-            return keys != null && keys.anyKey.wasPressedThisFrame
-                   || mouse != null && (mouse.leftButton.wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame)
-                   || touch != null && touch.primaryTouch.press.wasPressedThisFrame;
-        }
-
-        // CSS cubic-bezier timing, so the curves match the motion spec.
-        static float Bezier(float x1, float y1, float x2, float y2, float x)
-        {
-            if (x <= 0f || x >= 1f) return Mathf.Clamp01(x);
-            float lo = 0f, hi = 1f, t = x;
-            for (int i = 0; i < 20; i++)
-            {
-                t = (lo + hi) * 0.5f;
-                if (Cubic(x1, x2, t) < x) lo = t;
-                else hi = t;
-            }
-            return Cubic(y1, y2, t);
-        }
-
-        static float Cubic(float a, float b, float t)
-        {
-            float u = 1f - t;
-            return 3f * a * t * u * u + 3f * b * t * t * u + t * t * t;
         }
     }
 }

@@ -158,6 +158,36 @@ namespace ArcaneGambit.Game
             return sb.ToString();
         }
 
+        public static bool AnyPress()
+        {
+            var keys = UnityEngine.InputSystem.Keyboard.current;
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            var touch = UnityEngine.InputSystem.Touchscreen.current;
+            return keys != null && keys.anyKey.wasPressedThisFrame
+                   || mouse != null && (mouse.leftButton.wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame)
+                   || touch != null && touch.primaryTouch.press.wasPressedThisFrame;
+        }
+
+        // CSS cubic-bezier timing, so the curves match the motion specs.
+        public static float CubicBezier(float x1, float y1, float x2, float y2, float x)
+        {
+            if (x <= 0f || x >= 1f) return Mathf.Clamp01(x);
+            float lo = 0f, hi = 1f, t = x;
+            for (int i = 0; i < 20; i++)
+            {
+                t = (lo + hi) * 0.5f;
+                if (BezierAxis(x1, x2, t) < x) lo = t;
+                else hi = t;
+            }
+            return BezierAxis(y1, y2, t);
+        }
+
+        static float BezierAxis(float a, float b, float t)
+        {
+            float u = 1f - t;
+            return 3f * a * t * u * u + 3f * b * t * t * u + t * t * t;
+        }
+
         public static TMP_FontAsset TitleFont { get { if (s_title == null) LoadFonts(); return s_title; } }
         public static TMP_FontAsset BodyFont { get { if (s_body == null) LoadFonts(); return s_body; } }
         public static TMP_FontAsset ItalicFont { get { if (s_italic == null) LoadFonts(); return s_italic; } }

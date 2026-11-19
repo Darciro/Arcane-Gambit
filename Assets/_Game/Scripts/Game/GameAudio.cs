@@ -9,7 +9,7 @@ namespace ArcaneGambit.Game
 
     public sealed class GameAudio : MonoBehaviour
     {
-        const string MusicRoot = "Audio/Music/", SfxRoot = "Audio/Sfx/Sfx_";
+        internal const string MusicRoot = "Audio/Music/", SfxFolder = "Audio/Sfx", SfxRoot = SfxFolder + "/Sfx_";
         const float FadeTime = 2f, CrossfadeTime = 3f, StingerFadeOut = 0.6f;
 
         enum Mode { Shuffle, LoopOne, Once }
@@ -99,6 +99,19 @@ namespace ArcaneGambit.Game
             audio._mode = mode;
             if (mode == Mode.Once) audio.PlayNext(0f, StingerFadeOut);
             else audio.PlayNext(fadeIn, FadeTime);
+        }
+
+        /// <summary>Fades the music out; the next PlayMusic starts its playlist afresh.</summary>
+        public static void StopMusic(float fadeOut = StingerFadeOut)
+        {
+            if (s_instance == null) return;
+            var audio = s_instance;
+            audio._playlist = null;
+            audio._tracks = System.Array.Empty<AudioClip>();
+            audio._mode = Mode.Once;
+            audio._fadeOut = fadeOut;
+            audio._deck = 1 - audio._deck;
+            audio._decks[audio._deck].Stop();
         }
 
         void Update()

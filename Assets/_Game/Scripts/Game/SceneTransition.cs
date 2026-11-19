@@ -45,7 +45,19 @@ namespace ArcaneGambit.Game
         {
             if (Busy) return;
             Create();
-            s_instance.StartCoroutine(s_instance.Run(scene));
+            s_instance.StartCoroutine(s_instance.Run(scene, null));
+        }
+
+        /// <summary>Covers a load started elsewhere with scene activation held back, then lets the scene in.</summary>
+        public static void Finish(AsyncOperation load)
+        {
+            if (Busy)
+            {
+                load.allowSceneActivation = true;
+                return;
+            }
+            Create();
+            s_instance.StartCoroutine(s_instance.Run(null, load));
         }
 
         // Built ahead of the first use so the canvas already has its scaled size when the sheet starts to move.
@@ -190,7 +202,7 @@ namespace ArcaneGambit.Game
             _canvas.enabled = true;
         }
 
-        IEnumerator Run(string scene)
+        IEnumerator Run(string scene, AsyncOperation load)
         {
             Raise();
             _busy = true;
@@ -208,8 +220,11 @@ namespace ArcaneGambit.Game
             float covered = Time.unscaledTime;
             var priority = Application.backgroundLoadingPriority;
             Application.backgroundLoadingPriority = ThreadPriority.Low;
-            var load = SceneManager.LoadSceneAsync(scene);
-            load.allowSceneActivation = false;
+            if (load == null)
+            {
+                load = SceneManager.LoadSceneAsync(scene);
+                load.allowSceneActivation = false;
+            }
             yield return Ink(load);
 
             load.allowSceneActivation = true;

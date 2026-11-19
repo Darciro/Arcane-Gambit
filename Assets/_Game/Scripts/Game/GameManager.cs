@@ -714,6 +714,9 @@ namespace ArcaneGambit.Game
                     case LogKind.CardPlayed when CardCatalog.Get(e.Card).IsWeather:
                         _weatherNotices.Add(_logSeen);
                         break;
+                    case LogKind.WeatherCleared:
+                        if (_weather != null) _weather.Hide(e.Card);
+                        break;
                     case LogKind.Blocked:
                     case LogKind.Retreated:
                     case LogKind.UnitCaptured when e.Unit != UnitType.Sovereign:
@@ -2298,8 +2301,7 @@ namespace ArcaneGambit.Game
         {
             if (_weatherNotices.Count == 0) return;
             var card = _match.Log[_weatherNotices[0]].Card;
-            _matchFx.OnWeatherAcknowledged(card);
-            OnWeatherBoardFx(card);
+            OnWeatherBoardFx(card, _matchFx.OnWeatherAcknowledged(card));
             _weatherNotices.RemoveAt(0);
             Refresh();
             ScheduleAi();
@@ -3346,6 +3348,8 @@ namespace ArcaneGambit.Game
                     TextAlignmentOptions.Center);
             }
 
+            // Weather layers cover the board as the doc frames it, below the top margin; mud lies under everything.
+            var weatherGround = Ui.Rect(board, "Weather Ground", 0, BoardMargin, BoardSize, BoardSize - BoardMargin);
             var under = Ui.Rect(board, "Underlay", 0, 0, BoardSize, BoardSize);
             _markerLayer = Ui.Rect(board, "Markers", 0, 0, BoardSize, BoardSize);
             _trailLayer = Ui.Rect(board, "Trails", 0, 0, BoardSize, BoardSize);
@@ -3353,6 +3357,9 @@ namespace ArcaneGambit.Game
             // Board FX get their own layers: Refresh and the confront clear the others.
             _boardFxUnder = Ui.Rect(board, "FX Under", 0, 0, BoardSize, BoardSize);
             _piecesLayer = Ui.Rect(board, "Pieces", 0, 0, BoardSize, BoardSize);
+            var weatherSky = Ui.Rect(board, "Weather", 0, BoardMargin, BoardSize, BoardSize - BoardMargin);
+            var weatherOutside = Ui.Rect(board, "Weather Outside", 0, BoardMargin, BoardSize, BoardSize - BoardMargin);
+            _weather = BoardWeather.Create(weatherGround, weatherSky, weatherOutside, TorchSpots);
             _boardFxOver = Ui.Rect(board, "FX Over", 0, 0, BoardSize, BoardSize);
             var spotlight = Ui.Rect(board, "Spotlight", 0, 0, BoardSize, BoardSize);
             _spotGroup = spotlight.gameObject.AddComponent<CanvasGroup>();

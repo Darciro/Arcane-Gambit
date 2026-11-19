@@ -86,6 +86,14 @@ namespace ArcaneGambit.Game
             HeaderMargin = 2f;
             ButtonHeight = 50f;
             ButtonGap = 8f;
+            // The Playground's fifth button only fits the 390 height with touch-minimum buttons; PanelY moves down
+            // so the four-button panel would keep the design's centre, and BuildMenu centres the fifth around it.
+            if (HasPlayground)
+            {
+                ButtonHeight = 44f;
+                ButtonGap = 6f;
+                PanelY = 56f;
+            }
             ButtonFont = 21f;
             SoonFont = 13.5f;
             VersionX = s_side;
@@ -119,7 +127,12 @@ namespace ArcaneGambit.Game
             if (opening) GameAudio.PlayMusic(Playlist.Menu, IntroMusicFade);
             else GameAudio.PlayMusic(Playlist.Menu);
             BuildUi();
-            if (opening) BeginIntro();
+            if (opening)
+            {
+                // The menu surfaces from the brand intro's graphite.
+                if (Camera.main != null) Camera.main.backgroundColor = BrandIntro.Graphite;
+                BeginIntro();
+            }
             else _intro.Clear();
         }
 
@@ -190,7 +203,8 @@ namespace ArcaneGambit.Game
             UiProfile.Apply(canvasGo.GetComponent<CanvasScaler>(), s_size);
             _root = (RectTransform)canvasGo.transform;
 
-            Ui.Stretch(Ui.Image(_root, "Background", Ui.Art("Background"), 0, 0, 0, 0).rectTransform);
+            var background = Ui.Stretch(Ui.Image(_root, "Background", Ui.Art("Background"), 0, 0, 0, 0).rectTransform);
+            AddIntro(background, 0f, 0.8f, EaseOut);
             var backdrop = Ui.Stretch(Ui.Image(_root, "Backdrop", Ui.Art("Menu_Backdrop"), 0, 0, 0, 0).rectTransform);
             AddIntro(backdrop, 0f, 0.8f, EaseOut);
 
@@ -198,7 +212,8 @@ namespace ArcaneGambit.Game
             BuildBrand(stage);
             BuildMenu(stage);
 
-            var version = Ui.Label(_root, Loc.Format("ui.menu.version", Application.version), VersionX,
+            var version = Ui.Label(_root, Loc.Format(Debug.isDebugBuild ? "ui.menu.versionDev" : "ui.menu.version",
+                    Application.version), VersionX,
                 StageHeight - VersionBottom - 24f, 400f, 24f);
             version.fontSize = VersionFont;
             version.characterSpacing = 14f;
@@ -255,13 +270,17 @@ namespace ArcaneGambit.Game
         {
             // A phone leaves the app through the system, so its menu has no Exit and ends on the last button.
             bool exit = !UiProfile.Mobile;
+            bool playground = HasPlayground;
+            int buttons = playground ? 5 : 4;
             float headerHeight = HeaderHeight, headerMargin = HeaderMargin;
-            float height = PanelTop + headerHeight + headerMargin + ButtonGap + 4f * (ButtonHeight + ButtonGap)
+            float height = PanelTop + headerHeight + headerMargin + ButtonGap + buttons * (ButtonHeight + ButtonGap)
                 + (exit ? DividerHeight + ButtonGap + ButtonHeight : -ButtonGap) + PanelPadding;
+            // The extra button grows the panel both ways, so it stays centred on the brand.
+            float panelY = playground ? PanelY - (ButtonHeight + ButtonGap) * 0.5f : PanelY;
             // The panel's shadow is a sibling, so both ride in one layer.
             var layer = Ui.Rect(stage, "Menu", 0f, 0f, StageWidth, StageHeight);
             AddIntroRise(layer, 1.2f, 0.6f);
-            var panel = Ui.Modal(layer, PanelX, PanelY, PanelWidth, height);
+            var panel = Ui.Modal(layer, PanelX, panelY, PanelWidth, height);
 
             var header = Ui.Label(panel, Loc.Get("ui.menu.header"), 0f, PanelTop, PanelWidth, headerHeight,
                 TextAlignmentOptions.Top);
@@ -273,6 +292,10 @@ namespace ArcaneGambit.Game
             y = AddButton(panel, "ui.menu.multiplayer", y, OpenHall);
             y = AddButton(panel, "ui.menu.options", y, OpenOptions);
             y = AddButton(panel, "ui.menu.credits", y, OpenCredits);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (playground)
+                y = AddButton(panel, "ui.menu.playground", y, () => SceneTransition.Load(Playground.SceneName));
+#endif
             if (!exit) return;
 
             float center = PanelWidth * 0.5f, line = y + DividerHeight * 0.5f;
@@ -283,6 +306,19 @@ namespace ArcaneGambit.Game
             y += DividerHeight + ButtonGap;
 
             AddButton(panel, "ui.menu.exit", y, Quit);
+        }
+
+        // Development builds and the Editor only.
+        static bool HasPlayground
+        {
+            get
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                return Debug.isDebugBuild;
+#else
+                return false;
+#endif
+            }
         }
 
         float AddButton(RectTransform panel, string key, float y, UnityAction onClick)
